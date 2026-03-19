@@ -90,6 +90,22 @@ public class CombatManager {
         data.setShieldEndTick(0L);
     }
 
+    public void resetPlayerToDefault(ServerPlayerEntity player) {
+        PlayerCombatData data = getOrCreate(player);
+        CombatStats defaultStats = CombatStats.createDefault();
+
+        data.setStats(defaultStats);
+        data.setCurrentAmmo(defaultStats.getMaxAmmo());
+        data.setReloading(false);
+        data.setReloadEndTick(0L);
+        data.setLastShotTick(-9999L);
+        data.setShieldActive(false);
+        data.setShieldEndTick(0L);
+        data.setShieldCooldownEndTick(0L);
+
+        applyResolvedStatsToPlayer(player, defaultStats);
+    }
+
     private void applyResolvedStatsToPlayer(ServerPlayerEntity player, CombatStats stats) {
         EntityAttributeInstance maxHealthAttribute = player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (maxHealthAttribute != null) {

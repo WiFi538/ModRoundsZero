@@ -492,8 +492,8 @@ public class GameManager {
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
 
-        for (UUID uuid : playerTeams.keySet()) {
-            playerUpgradeData.computeIfAbsent(uuid, key -> new PlayerUpgradeData());
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            playerUpgradeData.put(player.getUuid(), new PlayerUpgradeData());
         }
 
         startNextRound(server);
@@ -519,11 +519,12 @@ public class GameManager {
         alivePlayers.clear();
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
+        playerUpgradeData.clear();
         pendingUpgradeLoserTeam = TeamId.NONE;
         pendingUpgradeWinnerTeam = TeamId.NONE;
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            combatManager.clearTemporaryState(player);
+            combatManager.resetPlayerToDefault(player);
             player.changeGameMode(GameMode.SURVIVAL);
 
             player.teleport(
