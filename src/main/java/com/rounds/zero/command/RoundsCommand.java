@@ -180,7 +180,7 @@ public class RoundsCommand {
                                                     return 1;
                                                 }))))
 
-
+                        // починил надеюсь
                         .then(CommandManager.literal("pick")
                                 .then(CommandManager.argument("target", EntityArgumentType.player())
                                         .then(CommandManager.argument("slot", IntegerArgumentType.integer(1, 5))
