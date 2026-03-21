@@ -4,6 +4,7 @@ public class UpgradeCard {
     private final String id;
     private final String title;
     private final String description;
+    private final String texturePath;
 
     private final int flatAmmoBonus;
 
@@ -22,6 +23,7 @@ public class UpgradeCard {
             String id,
             String title,
             String description,
+            String texturePath,
             int flatAmmoBonus,
             double damageMultiplier,
             double bulletSpeedMultiplier,
@@ -35,6 +37,7 @@ public class UpgradeCard {
         this.id = id;
         this.title = title;
         this.description = description;
+        this.texturePath = texturePath;
         this.flatAmmoBonus = flatAmmoBonus;
         this.damageMultiplier = damageMultiplier;
         this.bulletSpeedMultiplier = bulletSpeedMultiplier;
@@ -60,6 +63,10 @@ public class UpgradeCard {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getTexturePath() {
+        return texturePath;
     }
 
     public int getFlatAmmoBonus() {
@@ -103,6 +110,8 @@ public class UpgradeCard {
         private final String title;
         private final String description;
 
+        private String texturePath = "gui/cards/default.png";
+
         private int flatAmmoBonus = 0;
         private double damageMultiplier = 1.0;
         private double bulletSpeedMultiplier = 1.0;
@@ -117,6 +126,11 @@ public class UpgradeCard {
             this.id = id;
             this.title = title;
             this.description = description;
+        }
+
+        public Builder texturePath(String value) {
+            this.texturePath = value;
+            return this;
         }
 
         public Builder flatAmmoBonus(int value) {
@@ -169,6 +183,7 @@ public class UpgradeCard {
                     id,
                     title,
                     description,
+                    texturePath,
                     flatAmmoBonus,
                     damageMultiplier,
                     bulletSpeedMultiplier,
