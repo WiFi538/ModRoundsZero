@@ -29,6 +29,7 @@ public class RoundsZero implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ModPackets.registerC2SPackets();
         LOGGER.info("ROUNDS ZERO MOD LOADED!!!");
 
         GAME_MANAGER.addArena(new Arena(

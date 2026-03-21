@@ -1,5 +1,6 @@
 package com.rounds.zero;
 
+import com.rounds.zero.client.network.UpgradeClientPackets;
 import com.rounds.zero.network.ModPackets;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -30,6 +31,8 @@ public class ExampleModClient implements ClientModInitializer {
                 GLFW.GLFW_KEY_R,
                 "category.rounds_zero.CombatStats.java"
         ));
+
+        UpgradeClientPackets.init();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (shieldKey.wasPressed()) {

@@ -16,6 +16,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
+import com.rounds.zero.network.ModPackets;
 
 import java.util.*;
 
@@ -385,14 +386,10 @@ public class GameManager {
 
         for (ServerPlayerEntity player : getPlayersInTeam(server, loserTeam)) {
             playersWaitingForUpgradeChoice.add(player.getUuid());
-            currentUpgradeOffers.put(player.getUuid(), generateUpgradeOffer(5));
+            List<UpgradeCard> offer = generateUpgradeOffer(5);
+            currentUpgradeOffers.put(player.getUuid(), offer);
             player.changeGameMode(GameMode.SPECTATOR);
-
-            player.sendMessage(
-                    Text.literal("Раунд проигран. Выбери 1 из 5 улучшений командой /rounds upgrades")
-                            .formatted(Formatting.GOLD),
-                    false
-            );
+            ModPackets.sendUpgradeScreen(player, offer);
         }
 
         setGameState(GameState.UPGRADE_SELECTION);
