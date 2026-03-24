@@ -17,9 +17,13 @@ public class MatchSidebarManager {
 
     private static final String RED_ENTRY = "§0";
     private static final String BLUE_ENTRY = "§1";
+    private static final String GREEN_ENTRY = "§2";
+    private static final String YELLOW_ENTRY = "§3";
 
     private static final String RED_LINE_TEAM = "rounds_sidebar_red";
     private static final String BLUE_LINE_TEAM = "rounds_sidebar_blue";
+    private static final String GREEN_LINE_TEAM = "rounds_sidebar_green";
+    private static final String YELLOW_LINE_TEAM = "rounds_sidebar_yellow";
 
     public static void setupSidebar(MinecraftServer server) {
         ServerScoreboard scoreboard = server.getScoreboard();
@@ -40,6 +44,8 @@ public class MatchSidebarManager {
 
         setupLineTeam(scoreboard, RED_LINE_TEAM, RED_ENTRY, "Красные - ", Formatting.RED);
         setupLineTeam(scoreboard, BLUE_LINE_TEAM, BLUE_ENTRY, "Синие - ", Formatting.BLUE);
+        setupLineTeam(scoreboard, GREEN_LINE_TEAM, GREEN_ENTRY, "Зеленые - ", Formatting.GREEN);
+        setupLineTeam(scoreboard, YELLOW_LINE_TEAM, YELLOW_ENTRY, "Желтые - ", Formatting.YELLOW);
 
         updateSidebar(server);
     }
@@ -58,6 +64,8 @@ public class MatchSidebarManager {
 
         scoreboard.getPlayerScore(RED_ENTRY, objective).setScore(RoundsZero.GAME_MANAGER.getTeamScore(TeamId.RED));
         scoreboard.getPlayerScore(BLUE_ENTRY, objective).setScore(RoundsZero.GAME_MANAGER.getTeamScore(TeamId.BLUE));
+        scoreboard.getPlayerScore(GREEN_ENTRY, objective).setScore(RoundsZero.GAME_MANAGER.getTeamScore(TeamId.GREEN));
+        scoreboard.getPlayerScore(YELLOW_ENTRY, objective).setScore(RoundsZero.GAME_MANAGER.getTeamScore(TeamId.YELLOW));
 
         scoreboard.setObjectiveSlot(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID, objective);
     }
