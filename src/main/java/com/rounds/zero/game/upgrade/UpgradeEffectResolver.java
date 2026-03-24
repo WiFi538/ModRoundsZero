@@ -58,8 +58,8 @@ public final class UpgradeEffectResolver {
         if (poisonCloudCount > 0) {
             stats.setPoisonCloudRadius(3);
             stats.setPoisonCloudLifetimeTicks(60 + ((poisonCloudCount - 1) * 20));
-            stats.setPoisonCloudEffectDurationTicks(40);
-            stats.setPoisonCloudAmplifier(0);
+            stats.setPoisonCloudEffectDurationTicks(72);
+            stats.setPoisonCloudAmplifier(1);
         }
 
         if (blindnessCount > 0) {
