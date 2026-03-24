@@ -34,6 +34,8 @@ public class CombatManager {
     private static final Vector3f POISON_COLOR = new Vector3f(0.10f, 0.35f, 0.10f);
     private static final Vector3f RED_TEAM_COLOR = new Vector3f(0.95f, 0.20f, 0.20f);
     private static final Vector3f BLUE_TEAM_COLOR = new Vector3f(0.20f, 0.45f, 0.95f);
+    private static final Vector3f GREEN_TEAM_COLOR = new Vector3f(0.20f, 0.85f, 0.20f);
+    private static final Vector3f YELLOW_TEAM_COLOR = new Vector3f(0.95f, 0.90f, 0.20f);
 
     private final Map<UUID, PlayerCombatData> playerCombatData = new HashMap<>();
     private final List<ActiveField> activeFields = new ArrayList<>();
@@ -413,12 +415,14 @@ public class CombatManager {
     }
 
     private Vector3f getTeamColor(TeamId teamId) {
-        if (teamId == TeamId.BLUE) {
-            return BLUE_TEAM_COLOR;
-        }
-        return RED_TEAM_COLOR;
+        return switch (teamId) {
+            case RED -> RED_TEAM_COLOR;
+            case BLUE -> BLUE_TEAM_COLOR;
+            case GREEN -> GREEN_TEAM_COLOR;
+            case YELLOW -> YELLOW_TEAM_COLOR;
+            default -> RED_TEAM_COLOR;
+        };
     }
-
     private void sendCombatStatus(ServerPlayerEntity player, PlayerCombatData data, long now) {
         player.sendMessage(buildCombatStatusText(data, now), true);
     }
