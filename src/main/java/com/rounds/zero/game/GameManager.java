@@ -46,8 +46,11 @@ public class GameManager {
     private BlockPos lobbySpawn = new BlockPos(0, -34, 0);
 
     public GameManager() {
-        teamScores.put(TeamId.RED, 0);
-        teamScores.put(TeamId.BLUE, 0);
+        for (TeamId teamId : TeamId.values()) {
+            if (teamId != TeamId.NONE) {
+                teamScores.put(teamId, 0);
+            }
+        }
     }
 
     public CombatManager getCombatManager() {
@@ -284,6 +287,16 @@ public class GameManager {
         checkRoundWinByElimination(server);
     }
 
+    private BlockPos getSpawnForTeam(Arena arena, TeamId teamId) {
+        return switch (teamId) {
+            case RED -> arena.getRedSpawn();
+            case BLUE -> arena.getBlueSpawn();
+            case GREEN -> arena.getGreenSpawn();
+            case YELLOW -> arena.getYellowSpawn();
+            default -> null;
+        };
+    }
+
     public void handlePlayerRespawn(ServerPlayerEntity player) {
         if (gameState != GameState.ROUND_ACTIVE && gameState != GameState.UPGRADE_SELECTION) {
             return;
@@ -301,18 +314,18 @@ public class GameManager {
         player.changeGameMode(GameMode.SPECTATOR);
 
         if (currentArena != null) {
-            BlockPos targetPos = teamId == TeamId.RED
-                    ? currentArena.getRedSpawn()
-                    : currentArena.getBlueSpawn();
+            BlockPos targetPos = getSpawnForTeam(currentArena, teamId);
 
-            player.teleport(
-                    player.getServer().getOverworld(),
-                    targetPos.getX() + 0.5,
-                    targetPos.getY() + 1,
-                    targetPos.getZ() + 0.5,
-                    player.getYaw(),
-                    player.getPitch()
-            );
+            if (targetPos != null) {
+                player.teleport(
+                        player.getServer().getOverworld(),
+                        targetPos.getX() + 0.5,
+                        targetPos.getY() + 1,
+                        targetPos.getZ() + 0.5,
+                        player.getYaw(),
+                        player.getPitch()
+                );
+            }
         }
 
         if (gameState == GameState.UPGRADE_SELECTION && isWaitingForUpgradeChoice(player)) {
@@ -387,26 +400,38 @@ public class GameManager {
     }
 
     private void beginUpgradeSelection(MinecraftServer server, TeamId winnerTeam) {
-        TeamId loserTeam = getOppositeTeam(winnerTeam);
-
         pendingUpgradeWinnerTeam = winnerTeam;
-        pendingUpgradeLoserTeam = loserTeam;
+        pendingUpgradeLoserTeam = TeamId.NONE;
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
 
-        for (ServerPlayerEntity player : getPlayersInTeam(server, loserTeam)) {
-            playersWaitingForUpgradeChoice.add(player.getUuid());
-            List<UpgradeCard> offer = generateUpgradeOffer(5);
-            currentUpgradeOffers.put(player.getUuid(), offer);
-            player.changeGameMode(GameMode.SPECTATOR);
-            ModPackets.sendUpgradeScreen(player, offer);
+        List<TeamId> loserTeams = new ArrayList<>();
+
+        for (TeamId teamId : TeamId.values()) {
+            if (teamId == TeamId.NONE || teamId == winnerTeam) {
+                continue;
+            }
+
+            if (getPlayerCountInTeam(teamId) > 0) {
+                loserTeams.add(teamId);
+            }
+        }
+
+        for (TeamId loserTeam : loserTeams) {
+            for (ServerPlayerEntity player : getPlayersInTeam(server, loserTeam)) {
+                playersWaitingForUpgradeChoice.add(player.getUuid());
+                List<UpgradeCard> offer = generateUpgradeOffer(5);
+                currentUpgradeOffers.put(player.getUuid(), offer);
+                player.changeGameMode(GameMode.SPECTATOR);
+                ModPackets.sendUpgradeScreen(player, offer);
+            }
         }
 
         setGameState(GameState.UPGRADE_SELECTION);
 
         broadcastMessage(server,
-                Text.literal("Фаза выбора улучшений для проигравшей команды: ")
-                        .append(getTeamNameText(loserTeam))
+                Text.literal("Фаза выбора улучшений для проигравших команд. Победитель раунда: ")
+                        .append(getTeamNameText(winnerTeam))
         );
     }
 
@@ -416,18 +441,6 @@ public class GameManager {
 
         int resultSize = Math.min(count, pool.size());
         return new ArrayList<>(pool.subList(0, resultSize));
-    }
-
-    private TeamId getOppositeTeam(TeamId teamId) {
-        if (teamId == TeamId.RED) {
-            return TeamId.BLUE;
-        }
-
-        if (teamId == TeamId.BLUE) {
-            return TeamId.RED;
-        }
-
-        return TeamId.NONE;
     }
 
     public int getRoundsToWin() {
@@ -456,8 +469,11 @@ public class GameManager {
     }
 
     public void resetScores() {
-        teamScores.put(TeamId.RED, 0);
-        teamScores.put(TeamId.BLUE, 0);
+        for (TeamId teamId : TeamId.values()) {
+            if (teamId != TeamId.NONE) {
+                teamScores.put(teamId, 0);
+            }
+        }
     }
 
     public Arena getCurrentArena() {
@@ -482,14 +498,23 @@ public class GameManager {
     }
 
     public boolean canStartGame() {
-        int redCount = getPlayerCountInTeam(TeamId.RED);
-        int blueCount = getPlayerCountInTeam(TeamId.BLUE);
+        int activeTeams = 0;
 
-        if (debugMode) {
-            return redCount > 0 || blueCount > 0;
+        for (TeamId teamId : TeamId.values()) {
+            if (teamId == TeamId.NONE) {
+                continue;
+            }
+
+            if (getPlayerCountInTeam(teamId) > 0) {
+                activeTeams++;
+            }
         }
 
-        return redCount > 0 && blueCount > 0;
+        if (debugMode) {
+            return activeTeams >= 1;
+        }
+
+        return activeTeams >= 2;
     }
 
     public void startMatch(MinecraftServer server) {
@@ -559,15 +584,13 @@ public class GameManager {
     }
 
     private MutableText getTeamNameText(TeamId teamId) {
-        if (teamId == TeamId.RED) {
-            return Text.literal("КРАСНЫЕ").formatted(Formatting.RED);
-        }
-
-        if (teamId == TeamId.BLUE) {
-            return Text.literal("СИНИЕ").formatted(Formatting.BLUE);
-        }
-
-        return Text.literal("NONE").formatted(Formatting.GRAY);
+        return switch (teamId) {
+            case RED -> Text.literal("КРАСНЫЕ").formatted(Formatting.RED);
+            case BLUE -> Text.literal("СИНИЕ").formatted(Formatting.BLUE);
+            case GREEN -> Text.literal("ЗЕЛЕНЫЕ").formatted(Formatting.GREEN);
+            case YELLOW -> Text.literal("ЖЕЛТЫЕ").formatted(Formatting.YELLOW);
+            default -> Text.literal("NONE").formatted(Formatting.GRAY);
+        };
     }
 
     public void startNextRound(MinecraftServer server) {
@@ -606,21 +629,13 @@ public class GameManager {
             player.getInventory().clear();
             player.getInventory().insertStack(ModWeaponItems.createPistol());
 
-            if (teamId == TeamId.RED) {
+            BlockPos spawn = getSpawnForTeam(randomArena, teamId);
+            if (spawn != null) {
                 player.teleport(
                         server.getOverworld(),
-                        randomArena.getRedSpawn().getX() + 0.5,
-                        randomArena.getRedSpawn().getY(),
-                        randomArena.getRedSpawn().getZ() + 0.5,
-                        player.getYaw(),
-                        player.getPitch()
-                );
-            } else if (teamId == TeamId.BLUE) {
-                player.teleport(
-                        server.getOverworld(),
-                        randomArena.getBlueSpawn().getX() + 0.5,
-                        randomArena.getBlueSpawn().getY(),
-                        randomArena.getBlueSpawn().getZ() + 0.5,
+                        spawn.getX() + 0.5,
+                        spawn.getY(),
+                        spawn.getZ() + 0.5,
                         player.getYaw(),
                         player.getPitch()
                 );
