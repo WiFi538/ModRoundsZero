@@ -281,6 +281,24 @@ public class RoundsCommand {
 
                                                     return 1;
                                                 }))))
+
+                        .then(CommandManager.literal("config")
+                                .then(CommandManager.literal("rounds_to_win")
+                                        .then(CommandManager.argument("value", IntegerArgumentType.integer(1, 20))
+                                                .executes(context -> {
+                                                    int value = IntegerArgumentType.getInteger(context, "value");
+
+                                                    RoundsZero.GAME_MANAGER.setRoundsToWin(value);
+                                                    MatchSidebarManager.updateSidebar(context.getSource().getServer());
+
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Количество раундов для победы установлено: ")
+                                                                    .append(Text.literal(String.valueOf(value)).formatted(Formatting.GOLD)),
+                                                            true
+                                                    );
+
+                                                    return 1;
+                                                }))))
         );
     }
 
