@@ -18,6 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import com.rounds.zero.network.ModPackets;
 import com.rounds.zero.game.scoreboard.MatchSidebarManager;
+import net.minecraft.world.GameRules;
 
 import java.util.*;
 
@@ -330,6 +331,13 @@ public class GameManager {
         );
     }
 
+    // regeneration off
+    private void setNaturalRegeneration(MinecraftServer server, boolean enabled) {
+        server.getWorlds().forEach(world ->
+                world.getGameRules().get(GameRules.NATURAL_REGENERATION).set(enabled, server)
+        );
+    }
+
     private void checkRoundWinByElimination(MinecraftServer server) {
         if (gameState != GameState.ROUND_ACTIVE) {
             return;
@@ -490,6 +498,7 @@ public class GameManager {
         pendingUpgradeWinnerTeam = TeamId.NONE;
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
+        setNaturalRegeneration(server, false);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             playerUpgradeData.put(player.getUuid(), new PlayerUpgradeData());
@@ -540,6 +549,7 @@ public class GameManager {
         resetScores();
         setCurrentArena(null);
         setGameState(GameState.WAITING);
+        setNaturalRegeneration(server, true);
     }
 
     private void broadcastMessage(MinecraftServer server, Text message) {
