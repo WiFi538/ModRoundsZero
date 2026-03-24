@@ -61,7 +61,38 @@ public class RoundsCommand {
                                                     );
                                                     return targets.size();
                                                 }))))
+                                        .then(CommandManager.literal("green")
+                                                .executes(context -> {
+                                                    Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
 
+                                                    for (ServerPlayerEntity player : targets) {
+                                                        RoundsZero.GAME_MANAGER.setPlayerTeam(player, TeamId.GREEN);
+                                                        TeamVisualManager.setPlayerTeam(context.getSource().getServer(), player, TeamId.GREEN);
+                                                        player.sendMessage(buildJoinTeamMessage(TeamId.GREEN), false);
+                                                    }
+
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Игроки добавлены в зеленую команду."),
+                                                            true
+                                                    );
+                                                    return targets.size();
+                                                }))
+                                        .then(CommandManager.literal("yellow")
+                                                .executes(context -> {
+                                                    Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
+
+                                                    for (ServerPlayerEntity player : targets) {
+                                                        RoundsZero.GAME_MANAGER.setPlayerTeam(player, TeamId.YELLOW);
+                                                        TeamVisualManager.setPlayerTeam(context.getSource().getServer(), player, TeamId.YELLOW);
+                                                        player.sendMessage(buildJoinTeamMessage(TeamId.YELLOW), false);
+                                                    }
+
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Игроки добавлены в желтую команду."),
+                                                            true
+                                                    );
+                                                    return targets.size();
+                                                }))
 
                         .then(CommandManager.literal("leave")
                                 .then(CommandManager.argument("targets", EntityArgumentType.players())
@@ -263,6 +294,18 @@ public class RoundsCommand {
         if (teamId == TeamId.BLUE) {
             return Text.literal("Ты присоединился к ")
                     .append(Text.literal("СИНЕЙ").formatted(Formatting.BLUE))
+                    .append(Text.literal(" команде!"));
+        }
+
+        if (teamId == TeamId.GREEN) {
+            return Text.literal("Ты присоединился к ")
+                    .append(Text.literal("ЗЕЛЕНОЙ").formatted(Formatting.GREEN))
+                    .append(Text.literal(" команде!"));
+        }
+
+        if (teamId == TeamId.YELLOW) {
+            return Text.literal("Ты присоединился к ")
+                    .append(Text.literal("ЖЕЛТОЙ").formatted(Formatting.YELLOW))
                     .append(Text.literal(" команде!"));
         }
 
