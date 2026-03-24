@@ -48,6 +48,15 @@ public class RoundsZero implements ModInitializer {
                 new BlockPos(58, -34, 86)
         ));
 
+        GAME_MANAGER.addArena(new Arena(
+                "Cave",
+                new BlockPos(153, -34, 87),
+                new BlockPos(128, -34, 112),
+                new BlockPos(153, -34, 112),
+                new BlockPos(128, -34, 87)
+        ));
+
+
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> RoundsCommand.register(dispatcher));
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
