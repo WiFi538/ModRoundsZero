@@ -22,6 +22,17 @@ import java.util.List;
 
 public class RoundsCommand {
 
+    private static int joinPlayersToTeam(ServerCommandSource source, Collection<ServerPlayerEntity> targets, TeamId teamId, String successMessage) {
+        for (ServerPlayerEntity player : targets) {
+            RoundsZero.GAME_MANAGER.setPlayerTeam(player, teamId);
+            TeamVisualManager.setPlayerTeam(source.getServer(), player, teamId);
+            player.sendMessage(buildJoinTeamMessage(teamId), false);
+        }
+
+        source.sendFeedback(() -> Text.literal(successMessage), true);
+        return targets.size();
+    }
+
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 CommandManager.literal("rounds")
@@ -30,69 +41,33 @@ public class RoundsCommand {
                         .then(CommandManager.literal("join")
                                 .then(CommandManager.argument("targets", EntityArgumentType.players())
                                         .then(CommandManager.literal("red")
-                                                .executes(context -> {
-                                                    Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
-
-                                                    for (ServerPlayerEntity player : targets) {
-                                                        RoundsZero.GAME_MANAGER.setPlayerTeam(player, TeamId.RED);
-                                                        TeamVisualManager.setPlayerTeam(context.getSource().getServer(), player, TeamId.RED);
-                                                        player.sendMessage(buildJoinTeamMessage(TeamId.RED), false);
-                                                    }
-
-                                                    context.getSource().sendFeedback(
-                                                            () -> Text.literal("Игроки добавлены в красную команду."),
-                                                            true
-                                                    );
-                                                    return targets.size();
-                                                }))
+                                                .executes(context -> joinPlayersToTeam(
+                                                        context.getSource(),
+                                                        EntityArgumentType.getPlayers(context, "targets"),
+                                                        TeamId.RED,
+                                                        "Игроки добавлены в красную команду."
+                                                )))
                                         .then(CommandManager.literal("blue")
-                                                .executes(context -> {
-                                                    Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
-
-                                                    for (ServerPlayerEntity player : targets) {
-                                                        RoundsZero.GAME_MANAGER.setPlayerTeam(player, TeamId.BLUE);
-                                                        TeamVisualManager.setPlayerTeam(context.getSource().getServer(), player, TeamId.BLUE);
-                                                        player.sendMessage(buildJoinTeamMessage(TeamId.BLUE), false);
-                                                    }
-
-                                                    context.getSource().sendFeedback(
-                                                            () -> Text.literal("Игроки добавлены в синюю команду."),
-                                                            true
-                                                    );
-                                                    return targets.size();
-                                                }))))
+                                                .executes(context -> joinPlayersToTeam(
+                                                        context.getSource(),
+                                                        EntityArgumentType.getPlayers(context, "targets"),
+                                                        TeamId.BLUE,
+                                                        "Игроки добавлены в синюю команду."
+                                                )))
                                         .then(CommandManager.literal("green")
-                                                .executes(context -> {
-                                                    Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
-
-                                                    for (ServerPlayerEntity player : targets) {
-                                                        RoundsZero.GAME_MANAGER.setPlayerTeam(player, TeamId.GREEN);
-                                                        TeamVisualManager.setPlayerTeam(context.getSource().getServer(), player, TeamId.GREEN);
-                                                        player.sendMessage(buildJoinTeamMessage(TeamId.GREEN), false);
-                                                    }
-
-                                                    context.getSource().sendFeedback(
-                                                            () -> Text.literal("Игроки добавлены в зеленую команду."),
-                                                            true
-                                                    );
-                                                    return targets.size();
-                                                }))
+                                                .executes(context -> joinPlayersToTeam(
+                                                        context.getSource(),
+                                                        EntityArgumentType.getPlayers(context, "targets"),
+                                                        TeamId.GREEN,
+                                                        "Игроки добавлены в зеленую команду."
+                                                )))
                                         .then(CommandManager.literal("yellow")
-                                                .executes(context -> {
-                                                    Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
-
-                                                    for (ServerPlayerEntity player : targets) {
-                                                        RoundsZero.GAME_MANAGER.setPlayerTeam(player, TeamId.YELLOW);
-                                                        TeamVisualManager.setPlayerTeam(context.getSource().getServer(), player, TeamId.YELLOW);
-                                                        player.sendMessage(buildJoinTeamMessage(TeamId.YELLOW), false);
-                                                    }
-
-                                                    context.getSource().sendFeedback(
-                                                            () -> Text.literal("Игроки добавлены в желтую команду."),
-                                                            true
-                                                    );
-                                                    return targets.size();
-                                                }))
+                                                .executes(context -> joinPlayersToTeam(
+                                                        context.getSource(),
+                                                        EntityArgumentType.getPlayers(context, "targets"),
+                                                        TeamId.YELLOW,
+                                                        "Игроки добавлены в желтую команду."
+                                                )))))
 
                         .then(CommandManager.literal("leave")
                                 .then(CommandManager.argument("targets", EntityArgumentType.players())
@@ -303,30 +278,20 @@ public class RoundsCommand {
     }
 
     private static MutableText buildJoinTeamMessage(TeamId teamId) {
-        if (teamId == TeamId.RED) {
-            return Text.literal("Ты присоединился к ")
+        return switch (teamId) {
+            case RED -> Text.literal("Ты присоединился к ")
                     .append(Text.literal("КРАСНОЙ").formatted(Formatting.RED))
                     .append(Text.literal(" команде!"));
-        }
-
-        if (teamId == TeamId.BLUE) {
-            return Text.literal("Ты присоединился к ")
+            case BLUE -> Text.literal("Ты присоединился к ")
                     .append(Text.literal("СИНЕЙ").formatted(Formatting.BLUE))
                     .append(Text.literal(" команде!"));
-        }
-
-        if (teamId == TeamId.GREEN) {
-            return Text.literal("Ты присоединился к ")
+            case GREEN -> Text.literal("Ты присоединился к ")
                     .append(Text.literal("ЗЕЛЕНОЙ").formatted(Formatting.GREEN))
                     .append(Text.literal(" команде!"));
-        }
-
-        if (teamId == TeamId.YELLOW) {
-            return Text.literal("Ты присоединился к ")
+            case YELLOW -> Text.literal("Ты присоединился к ")
                     .append(Text.literal("ЖЕЛТОЙ").formatted(Formatting.YELLOW))
                     .append(Text.literal(" команде!"));
-        }
-
-        return Text.literal("Команда не выбрана.").formatted(Formatting.GRAY);
+            default -> Text.literal("Ты без команды.").formatted(Formatting.GRAY);
+        };
     }
 }
