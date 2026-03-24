@@ -335,16 +335,16 @@ public class GameManager {
             return;
         }
 
-        int redAlive = getAliveCountInTeam(TeamId.RED);
-        int blueAlive = getAliveCountInTeam(TeamId.BLUE);
-
-        if (redAlive > 0 && blueAlive == 0) {
-            endRound(server, TeamId.RED);
-            return;
+        List<TeamId> aliveTeams = new ArrayList<>();
+        for (TeamId teamId : TeamId.values()) {
+            if (teamId == TeamId.NONE) continue;
+            if (getAliveCountInTeam(teamId) > 0) {
+                aliveTeams.add(teamId);
+            }
         }
 
-        if (blueAlive > 0 && redAlive == 0) {
-            endRound(server, TeamId.BLUE);
+        if (aliveTeams.size() == 1) {
+            endRound(server, aliveTeams.get(0));
         }
     }
 
