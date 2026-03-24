@@ -18,6 +18,7 @@ public class UpgradeCard {
     private final double reloadPercent;
 
     private final long reloadTicksFlat;
+    private final long shieldCooldownTicksFlat;
 
     private UpgradeCard(
             String id,
@@ -32,7 +33,8 @@ public class UpgradeCard {
             double fireRatePercent,
             double shieldCooldownPercent,
             double reloadPercent,
-            long reloadTicksFlat
+            long reloadTicksFlat,
+            long shieldCooldownTicksFlat
     ) {
         this.id = id;
         this.title = title;
@@ -47,6 +49,7 @@ public class UpgradeCard {
         this.shieldCooldownPercent = shieldCooldownPercent;
         this.reloadPercent = reloadPercent;
         this.reloadTicksFlat = reloadTicksFlat;
+        this.shieldCooldownTicksFlat = shieldCooldownTicksFlat;
     }
 
     public static Builder builder(String id, String title, String description) {
@@ -105,6 +108,10 @@ public class UpgradeCard {
         return reloadTicksFlat;
     }
 
+    public long getShieldCooldownTicksFlat() {
+        return shieldCooldownTicksFlat;
+    }
+
     public static class Builder {
         private final String id;
         private final String title;
@@ -121,6 +128,7 @@ public class UpgradeCard {
         private double shieldCooldownPercent = 0.0;
         private double reloadPercent = 0.0;
         private long reloadTicksFlat = 0L;
+        private long shieldCooldownTicksFlat;
 
         private Builder(String id, String title, String description) {
             this.id = id;
@@ -178,6 +186,11 @@ public class UpgradeCard {
             return this;
         }
 
+        public Builder shieldCooldownTicksFlat(long shieldCooldownTicksFlat) {
+            this.shieldCooldownTicksFlat = shieldCooldownTicksFlat;
+            return this;
+        }
+
         public UpgradeCard build() {
             return new UpgradeCard(
                     id,
@@ -192,7 +205,8 @@ public class UpgradeCard {
                     fireRatePercent,
                     shieldCooldownPercent,
                     reloadPercent,
-                    reloadTicksFlat
+                    reloadTicksFlat,
+                    shieldCooldownTicksFlat
             );
         }
     }

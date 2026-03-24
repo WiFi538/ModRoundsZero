@@ -371,19 +371,27 @@ public class CombatManager {
                 }
 
                 if (field.effectType == FieldEffectType.HEALING) {
-                    player.addStatusEffect(new StatusEffectInstance(
+                    applyEffectIfAbsent(player, new StatusEffectInstance(
                             StatusEffects.REGENERATION,
                             field.effectDurationTicks,
                             field.amplifier
                     ));
                 } else if (field.effectType == FieldEffectType.POISON) {
-                    player.addStatusEffect(new StatusEffectInstance(
+                    applyEffectIfAbsent(player, new StatusEffectInstance(
                             StatusEffects.POISON,
                             field.effectDurationTicks,
                             field.amplifier
                     ));
                 }
             }
+        }
+    }
+
+    private void applyEffectIfAbsent(ServerPlayerEntity player, StatusEffectInstance effect) {
+        StatusEffectInstance current = player.getStatusEffect(effect.getEffectType());
+
+        if (current == null) {
+            player.addStatusEffect(effect);
         }
     }
 

@@ -8,22 +8,22 @@ public final class UpgradeRegistry {
     private static final List<UpgradeCard> ALL_CARDS = new ArrayList<>();
 
     static {
-        register(UpgradeCard.builder(
-                "big_bullet",
-                "БОЛЬШАЯ ПУЛЯ",
-                "Размер пули x2, перезарядка +0.25с"
-        ).texturePath("rounds_zero:textures/gui/cards/big_bullet.png")
-                .bulletSizeMultiplier(2.0)
-                .reloadTicksFlat(5L)
-                .build());
+//        register(UpgradeCard.builder(
+//                "big_bullet",
+//                "БОЛЬШАЯ ПУЛЯ",
+//                "Размер пули x2, перезарядка +0.25с"
+//        ).texturePath("rounds_zero:textures/gui/cards/big_bullet.png")
+//                .bulletSizeMultiplier(2.0)
+//                .reloadTicksFlat(5L)
+//                .build());
 
         register(UpgradeCard.builder(
                 "ahui_plan",
                 "АХУЕННЫЙ ПЛАН",
-                "+100% урона, -150% скорости стрельбы, перезарядка +0.5с"
+                "+100% урона, -100% скорости стрельбы, перезарядка +0.5с"
         ).texturePath("rounds_zero:textures/gui/cards/ahui_plan.png")
                 .damageMultiplier(2.0)
-                .fireRatePercent(-150.0)
+                .fireRatePercent(-100.0)
                 .reloadTicksFlat(10L)
                 .build());
 
@@ -40,57 +40,59 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "bogatyr",
                 "БОГАТЫРЬ",
-                "-30% перезарядки блока, +30% HP"
+                "-25% перезарядки блока, +50% HP"
         ).texturePath("rounds_zero:textures/gui/cards/bogatyr.png")
-                .shieldCooldownPercent(-30.0)
-                .maxHealthMultiplier(1.3)
+                .shieldCooldownPercent(-25.0)
+                .maxHealthMultiplier(1.5)
                 .build());
 
         register(UpgradeCard.builder(
                 "skorostrel",
                 "СКОРОСТРЕЛ",
-                "+250% скорости пуль, -50% скорости стрельбы, +0.25с перезарядки"
+                "+250% скорости пуль, -50% скорости стрельбы, +2с перезарядки"
         ).texturePath("rounds_zero:textures/gui/cards/skorostrel.png")
                 .bulletSpeedMultiplier(3.5)
                 .fireRatePercent(-50.0)
-                .reloadTicksFlat(5L)
+                .reloadTicksFlat(40L)
                 .build());
 
         register(UpgradeCard.builder(
                 "glass_cannon",
                 "СТЕКЛЯННАЯ ПУШКА",
-                "+100% урона, -100% HP, -0.25с перезарядки"
+                "+100% урона, -60% HP, -0.5с перезарядки"
         ).texturePath("rounds_zero:textures/gui/cards/glass_cannon.png")
                 .damageMultiplier(2.0)
-                .maxHealthMultiplier(0.01)
-                .reloadTicksFlat(-5L)
+                .maxHealthMultiplier(0.4)
+                .reloadTicksFlat(-10L)
                 .build());
 
         register(UpgradeCard.builder(
                 "your_mama",
                 "ТВОЯ МАМА",
-                "+80% HP"
+                "+80% HP, -1 к боезапасу, -1с перезарядки"
         ).texturePath("rounds_zero:textures/gui/cards/your_mama.png")
                 .maxHealthMultiplier(1.8)
+                .flatAmmoBonus(-1)
+                .reloadTicksFlat(-20L)
                 .build());
 
         register(UpgradeCard.builder(
                 "fast_gonzales",
                 "БЫСТРЫЙ ГОНЗАЛЕС",
-                "-70% перезарядки патронов"
+                "-50% перезарядки патронов"
         ).texturePath("rounds_zero:textures/gui/cards/fast_gonzales.png")
-                .reloadPercent(-70.0)
+                .reloadPercent(-50.0)
                 .build());
 
         register(UpgradeCard.builder(
                 "obossivatel",
                 "ОБОССЫВАТЕЛЬ",
-                "+1000% скорости стрельбы, +10 патронов, -75% урона, +0.25с перезарядки"
+                "+1000% скорости стрельбы, +5 патронов, -50% урона, +1с перезарядки"
         ).texturePath("rounds_zero:textures/gui/cards/obossivatel.png")
                 .fireRatePercent(1000.0)
-                .flatAmmoBonus(10)
-                .damageMultiplier(0.25)
-                .reloadTicksFlat(5L)
+                .flatAmmoBonus(5)
+                .damageMultiplier(0.5)
+                .reloadTicksFlat(20L)
                 .build());
 
         register(UpgradeCard.builder(
@@ -106,20 +108,19 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "raskrutka",
                 "РАСКРУТКА",
-                "+100% скорости пули, +60% урона, -100% скорости стрельбы, +0.5с перезарядки"
+                "+100% скорости пули, +50% скорости стрельбы, +0.5с перезарядки"
         ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
                 .bulletSpeedMultiplier(2.0)
-                .damageMultiplier(1.6)
-                .fireRatePercent(-100.0)
+                .fireRatePercent(50.0)
                 .reloadTicksFlat(10L)
                 .build());
 
         register(UpgradeCard.builder(
                 "tochniy_vystrel",
                 "ТОЧНЫЙ ВЫСТРЕЛ",
-                "+40% HP, +100% скорости пули, +0.25с перезарядки"
+                "+30% HP, +100% скорости пули, +0.25с перезарядки"
         ).texturePath("rounds_zero:textures/gui/cards/tochniy_vystrel.png")
-                .maxHealthMultiplier(1.4)
+                .maxHealthMultiplier(1.3)
                 .bulletSpeedMultiplier(2.0)
                 .reloadTicksFlat(5L)
                 .build());
@@ -135,19 +136,19 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "healing_field",
                 "ЛЕЧАЩЕЕ ПОЛЕ",
-                "При активации щита создаёт поле регенерации, +30% HP, +0.5с кд щита"
+                "При активации щита создаёт поле регенерации, +30% HP, +1с кд щита"
         ).texturePath("rounds_zero:textures/gui/cards/healing_field.png")
                 .maxHealthMultiplier(1.3)
-                .shieldCooldownPercent(50.0)
+                .shieldCooldownTicksFlat(20)
                 .build());
 
         register(UpgradeCard.builder(
                 "poison_bullet",
                 "ОТРАВА",
-                "Пуля накладывает отравление I на 2с, +70% урона, -30% перезарядки, -1 патрон"
+                "Пуля накладывает отравление III, +10% урона, -15% перезарядки, -1 патрон"
         ).texturePath("rounds_zero:textures/gui/cards/poison_bullet.png")
-                .damageMultiplier(1.7)
-                .reloadPercent(-30.0)
+                .damageMultiplier(1.1)
+                .reloadPercent(-15.0)
                 .flatAmmoBonus(-1)
                 .build());
 

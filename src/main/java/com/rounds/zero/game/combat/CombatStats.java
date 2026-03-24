@@ -3,15 +3,15 @@ package com.rounds.zero.game.combat;
 public class CombatStats {
     private int maxAmmo = 3;
 
-    private long shotCooldownTicks = 10L;
-    private long reloadDurationTicks = 40L;
+    private long shotCooldownTicks = 20L;
+    private long reloadDurationTicks = 60L;
 
     private double bulletDamage = 3.0;
     private double bulletSpeed = 1.0;
     private double bulletSize = 1.0;
 
-    private long shieldDurationTicks = 10L;
-    private long shieldCooldownTicks = 60L;
+    private long shieldDurationTicks = 30L;
+    private long shieldCooldownTicks = 100L;
 
     private double maxHealth = 20.0;
 

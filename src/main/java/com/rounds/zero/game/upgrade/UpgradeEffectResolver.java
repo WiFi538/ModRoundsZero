@@ -46,13 +46,13 @@ public final class UpgradeEffectResolver {
         if (healingFieldCount > 0) {
             stats.setHealingFieldRadius(2);
             stats.setHealingFieldLifetimeTicks(40);
-            stats.setHealingFieldEffectDurationTicks(40);
-            stats.setHealingFieldAmplifier(healingFieldCount - 1);
+            stats.setHealingFieldEffectDurationTicks(100 + ((healingFieldCount - 1) * 20));
+            stats.setHealingFieldAmplifier(2);
         }
 
         if (poisonBulletCount > 0) {
-            stats.setPoisonBulletDurationTicks(40);
-            stats.setPoisonBulletAmplifier(poisonBulletCount - 1);
+            stats.setPoisonBulletDurationTicks(72 + ((poisonBulletCount - 1) * 24));
+            stats.setPoisonBulletAmplifier(2);
         }
 
         if (poisonCloudCount > 0) {
@@ -80,6 +80,7 @@ public final class UpgradeEffectResolver {
 
         stats.setShotCooldownTicks(applyFireRatePercent(stats.getShotCooldownTicks(), card.getFireRatePercent()));
         stats.setShieldCooldownTicks(applyPercentToDuration(stats.getShieldCooldownTicks(), card.getShieldCooldownPercent()));
+        stats.setShieldCooldownTicks(stats.getShieldCooldownTicks() + card.getShieldCooldownTicksFlat());
         stats.setReloadDurationTicks(applyPercentToDuration(stats.getReloadDurationTicks(), card.getReloadPercent()));
         stats.setReloadDurationTicks(stats.getReloadDurationTicks() + card.getReloadTicksFlat());
     }
