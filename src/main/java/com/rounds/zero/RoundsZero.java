@@ -34,14 +34,18 @@ public class RoundsZero implements ModInitializer {
 
         GAME_MANAGER.addArena(new Arena(
                 "TEST_green",
-                new BlockPos(84, -34, 49),
-                new BlockPos(57, -34, 76)
+                new BlockPos(84, -34, 49),   // red
+                new BlockPos(57, -34, 76),   // blue
+                new BlockPos(84, -34, 76),   // green
+                new BlockPos(57, -34, 49)    // yellow
         ));
 
         GAME_MANAGER.addArena(new Arena(
                 "TEST_pink",
                 new BlockPos(85, -34, 86),
-                new BlockPos(58, -34, 113)
+                new BlockPos(58, -34, 113),
+                new BlockPos(85, -34, 113),
+                new BlockPos(58, -34, 86)
         ));
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> RoundsCommand.register(dispatcher));
