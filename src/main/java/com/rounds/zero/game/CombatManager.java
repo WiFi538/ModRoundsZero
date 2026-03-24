@@ -326,6 +326,20 @@ public class CombatManager {
         tickFields(server, now);
     }
 
+    // effect status update
+    private void applyStatusEffectSmart(ServerPlayerEntity player, StatusEffectInstance newEffect) {
+        StatusEffectInstance current = player.getStatusEffect(newEffect.getEffectType());
+
+        if (current == null) {
+            player.addStatusEffect(newEffect);
+            return;
+        }
+
+        if (current.getAmplifier() < newEffect.getAmplifier()) {
+            player.addStatusEffect(newEffect);
+        }
+    }
+
     private void tickFields(MinecraftServer server, long now) {
         Iterator<ActiveField> iterator = activeFields.iterator();
         while (iterator.hasNext()) {
@@ -357,13 +371,13 @@ public class CombatManager {
                 }
 
                 if (field.effectType == FieldEffectType.HEALING) {
-                    player.addStatusEffect(new StatusEffectInstance(
+                    applyStatusEffectSmart(player, new StatusEffectInstance(
                             StatusEffects.REGENERATION,
                             field.effectDurationTicks,
                             field.amplifier
                     ));
                 } else if (field.effectType == FieldEffectType.POISON) {
-                    player.addStatusEffect(new StatusEffectInstance(
+                    applyStatusEffectSmart(player, new StatusEffectInstance(
                             StatusEffects.POISON,
                             field.effectDurationTicks,
                             field.amplifier
