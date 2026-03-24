@@ -1,32 +1,38 @@
 package com.rounds.zero.game.team;
 
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public class TeamVisualManager {
 
     private static final String RED_TEAM_NAME = "rounds_red";
     private static final String BLUE_TEAM_NAME = "rounds_blue";
+    private static final String GREEN_TEAM_NAME = "rounds_green";
+    private static final String YELLOW_TEAM_NAME = "rounds_yellow";
 
     public static void setupTeams(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
 
-        Team redTeam = scoreboard.getTeam(RED_TEAM_NAME);
-        if (redTeam == null) {
-            redTeam = scoreboard.addTeam(RED_TEAM_NAME);
-            redTeam.setDisplayName(net.minecraft.text.Text.literal("Красные"));
-            redTeam.setColor(Formatting.RED);
+        createOrUpdateTeam(scoreboard, RED_TEAM_NAME, "Красные", Formatting.RED);
+        createOrUpdateTeam(scoreboard, BLUE_TEAM_NAME, "Синие", Formatting.BLUE);
+        createOrUpdateTeam(scoreboard, GREEN_TEAM_NAME, "Зеленые", Formatting.GREEN);
+        createOrUpdateTeam(scoreboard, YELLOW_TEAM_NAME, "Желтые", Formatting.YELLOW);
+    }
+
+    private static void createOrUpdateTeam(Scoreboard scoreboard, String name, String displayName, Formatting color) {
+        Team team = scoreboard.getTeam(name);
+        if (team == null) {
+            team = scoreboard.addTeam(name);
         }
 
-        Team blueTeam = scoreboard.getTeam(BLUE_TEAM_NAME);
-        if (blueTeam == null) {
-            blueTeam = scoreboard.addTeam(BLUE_TEAM_NAME);
-            blueTeam.setDisplayName(net.minecraft.text.Text.literal("Синие"));
-            blueTeam.setColor(Formatting.BLUE);
-        }
+        team.setDisplayName(Text.literal(displayName));
+        team.setColor(color);
+        team.setNameTagVisibilityRule(AbstractTeam.VisibilityRule.HIDE_FOR_OTHER_TEAMS);
     }
 
     public static void setPlayerTeam(MinecraftServer server, ServerPlayerEntity player, TeamId teamId) {
@@ -35,16 +41,16 @@ public class TeamVisualManager {
         setupTeams(server);
         clearPlayerTeam(server, player);
 
-        if (teamId == TeamId.RED) {
-            Team redTeam = scoreboard.getTeam(RED_TEAM_NAME);
-            if (redTeam != null) {
-                scoreboard.addPlayerToTeam(player.getEntityName(), redTeam);
-            }
-        } else if (teamId == TeamId.BLUE) {
-            Team blueTeam = scoreboard.getTeam(BLUE_TEAM_NAME);
-            if (blueTeam != null) {
-                scoreboard.addPlayerToTeam(player.getEntityName(), blueTeam);
-            }
+        Team targetTeam = switch (teamId) {
+            case RED -> scoreboard.getTeam(RED_TEAM_NAME);
+            case BLUE -> scoreboard.getTeam(BLUE_TEAM_NAME);
+            case GREEN -> scoreboard.getTeam(GREEN_TEAM_NAME);
+            case YELLOW -> scoreboard.getTeam(YELLOW_TEAM_NAME);
+            default -> null;
+        };
+
+        if (targetTeam != null) {
+            scoreboard.addPlayerToTeam(player.getEntityName(), targetTeam);
         }
     }
 

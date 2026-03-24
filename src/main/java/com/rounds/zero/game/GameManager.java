@@ -17,6 +17,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import com.rounds.zero.network.ModPackets;
+import com.rounds.zero.game.scoreboard.MatchSidebarManager;
 
 import java.util.*;
 
@@ -361,6 +362,7 @@ public class GameManager {
         }
 
         addScore(winnerTeam, 1);
+        MatchSidebarManager.updateSidebar(server);
 
         broadcastMessage(server,
                 Text.literal("Раунд выиграла команда ")
@@ -534,6 +536,7 @@ public class GameManager {
             );
         }
 
+        MatchSidebarManager.removeSidebar(server);
         resetScores();
         setCurrentArena(null);
         setGameState(GameState.WAITING);
