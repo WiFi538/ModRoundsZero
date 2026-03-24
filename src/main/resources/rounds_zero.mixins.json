@@ -3,7 +3,8 @@
   "package": "com.rounds.zero.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PersistentProjectileEntityMixin"
+    "PersistentProjectileEntityMixin",
+    "HungerManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
