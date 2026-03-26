@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.TypedActionResult;
@@ -34,10 +35,10 @@ public class RoundsZero implements ModInitializer {
 
         GAME_MANAGER.addArena(new Arena(
                 "Bank",
-                new BlockPos(84, -34, 49),   // red
-                new BlockPos(57, -34, 76),   // blue
-                new BlockPos(84, -34, 76),   // green
-                new BlockPos(57, -34, 49)    // yellow
+                new BlockPos(84, -34, 49),
+                new BlockPos(57, -34, 76),
+                new BlockPos(84, -34, 76),
+                new BlockPos(57, -34, 49)
         ));
 
         GAME_MANAGER.addArena(new Arena(
@@ -58,10 +59,10 @@ public class RoundsZero implements ModInitializer {
 
         GAME_MANAGER.addArena(new Arena(
                 "TrainStation",
-                new BlockPos(118, -34, 87),     // red
-                new BlockPos(118, -34, 112),    // blue
-                new BlockPos(93, -34, 112),    // green
-                new BlockPos(93, -34, 87)      // yellow
+                new BlockPos(118, -34, 87),
+                new BlockPos(118, -34, 112),
+                new BlockPos(93, -34, 112),
+                new BlockPos(93, -34, 87)
         ));
 
         GAME_MANAGER.addArena(new Arena(
@@ -71,7 +72,6 @@ public class RoundsZero implements ModInitializer {
                 new BlockPos(152, -34, 75),
                 new BlockPos(137, -34, 75)
         ));
-
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> RoundsCommand.register(dispatcher));
 
@@ -84,6 +84,16 @@ public class RoundsZero implements ModInitializer {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayerEntity player)) {
                 return true;
+            }
+
+            // 1) Полностью убираем урон от падения для игроков режима
+            if (GAME_MANAGER.hasTeam(player) && source.isOf(DamageTypes.FALL)) {
+                return false;
+            }
+
+            // 3) Победители неуязвимы во время выбора карточек проигравшими
+            if (GAME_MANAGER.isPlayerRoundWinnerInvulnerable(player)) {
+                return false;
             }
 
             if (!GAME_MANAGER.isPlayerShieldActive(player)) {

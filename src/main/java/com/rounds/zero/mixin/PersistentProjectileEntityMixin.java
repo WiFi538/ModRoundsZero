@@ -33,6 +33,8 @@ public class PersistentProjectileEntityMixin {
         if (entityHitResult.getEntity() instanceof ServerPlayerEntity target) {
             RoundsZero.GAME_MANAGER.getCombatManager().handleProjectileHitEntity(projectile, shooter, target);
         }
+
+        projectile.discard();
     }
 
     @Inject(method = "onBlockHit", at = @At("TAIL"))
@@ -52,5 +54,6 @@ public class PersistentProjectileEntityMixin {
         }
 
         RoundsZero.GAME_MANAGER.getCombatManager().handleProjectileHitBlock(projectile, shooter, blockHitResult.getBlockPos());
+        projectile.discard();
     }
 }

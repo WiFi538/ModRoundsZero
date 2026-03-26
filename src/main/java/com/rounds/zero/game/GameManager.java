@@ -45,6 +45,8 @@ public class GameManager {
     private Arena currentArena;
     private BlockPos lobbySpawn = new BlockPos(0, -34, 0);
 
+    private Integer savedRandomTickSpeed = null;
+
     public GameManager() {
         for (TeamId teamId : TeamId.values()) {
             if (teamId != TeamId.NONE) {
@@ -59,6 +61,15 @@ public class GameManager {
 
     public boolean isPlayerShieldActive(ServerPlayerEntity player) {
         return combatManager.isShieldActive(player);
+    }
+
+    public boolean isPlayerRoundWinnerInvulnerable(ServerPlayerEntity player) {
+        if (gameState != GameState.UPGRADE_SELECTION) {
+            return false;
+        }
+
+        TeamId teamId = getPlayerTeam(player);
+        return teamId != TeamId.NONE && teamId == pendingUpgradeWinnerTeam;
     }
 
     public void tickCombat(MinecraftServer server) {
@@ -351,6 +362,30 @@ public class GameManager {
         );
     }
 
+    private void setPlantGrowthEnabled(MinecraftServer server, boolean enabled) {
+        if (!enabled) {
+            if (savedRandomTickSpeed == null) {
+                savedRandomTickSpeed = server.getOverworld()
+                        .getGameRules()
+                        .get(net.minecraft.world.GameRules.RANDOM_TICK_SPEED)
+                        .get();
+            }
+
+            server.getWorlds().forEach(world ->
+                    world.getGameRules().get(net.minecraft.world.GameRules.RANDOM_TICK_SPEED).set(0, server)
+            );
+            return;
+        }
+
+        int valueToRestore = savedRandomTickSpeed != null ? savedRandomTickSpeed : 3;
+
+        server.getWorlds().forEach(world ->
+                world.getGameRules().get(net.minecraft.world.GameRules.RANDOM_TICK_SPEED).set(valueToRestore, server)
+        );
+
+        savedRandomTickSpeed = null;
+    }
+
     private void checkRoundWinByElimination(MinecraftServer server) {
         if (gameState != GameState.ROUND_ACTIVE) {
             return;
@@ -524,6 +559,7 @@ public class GameManager {
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
         setNaturalRegeneration(server, false);
+        setPlantGrowthEnabled(server, false);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             playerUpgradeData.put(player.getUuid(), new PlayerUpgradeData());
@@ -620,7 +656,7 @@ public class GameManager {
             CombatStats resolvedStats = UpgradeEffectResolver.resolve(getOwnedUpgrades(player));
             combatManager.preparePlayerForNewRound(player, resolvedStats);
 
-            player.changeGameMode(GameMode.SURVIVAL);
+            player.changeGameMode(GameMode.ADVENTURE);
             player.setHealth(player.getMaxHealth());
             player.getHungerManager().setFoodLevel(20);
             player.getHungerManager().setSaturationLevel(20.0f);
