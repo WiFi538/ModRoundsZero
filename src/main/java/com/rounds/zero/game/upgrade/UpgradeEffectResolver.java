@@ -40,7 +40,7 @@ public final class UpgradeEffectResolver {
         }
 
         if (iceBulletsCount > 0) {
-            stats.setIceBulletDurationTicks(20 * iceBulletsCount);
+            stats.setIceBulletDurationTicks(20 * iceBulletsCount + 20);
         }
 
         if (healingFieldCount > 0) {

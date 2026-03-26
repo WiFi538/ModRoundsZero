@@ -17,10 +17,12 @@ public final class UpgradeRegistry {
 //                .reloadTicksFlat(5L)
 //                .build());
 
+        // сколько помещается в описание "Пуля создаёт облако яда, -20% скорости стрельбы, +0.5с" 54 символа
+
         register(UpgradeCard.builder(
                 "ahui_plan",
                 "АХУЕННЫЙ ПЛАН",
-                "+100% урона, -100% скорости стрельбы, перезарядка +0.5с"
+                "+100% DMG, -100% S_Attack, +0.5с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/ahui_plan.png")
                 .damageMultiplier(2.0)
                 .fireRatePercent(-100.0)
@@ -30,7 +32,7 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "combine",
                 "КОМБАЙН",
-                "+100% урона, перезарядка +0.25с, -2 к боезапасу"
+                "+100% DMG, +0.25с Reload, -2 Ammo"
         ).texturePath("rounds_zero:textures/gui/cards/combine.png")
                 .damageMultiplier(2.0)
                 .reloadTicksFlat(5L)
@@ -40,7 +42,7 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "bogatyr",
                 "БОГАТЫРЬ",
-                "-25% перезарядки блока, +50% HP"
+                "-25% Reload Shield, +50% HP"
         ).texturePath("rounds_zero:textures/gui/cards/bogatyr.png")
                 .shieldCooldownPercent(-25.0)
                 .maxHealthMultiplier(1.5)
@@ -49,17 +51,17 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "skorostrel",
                 "СКОРОСТРЕЛ",
-                "+250% скорости пуль, -50% скорости стрельбы, +2с перезарядки"
+                "+250% S_Bullet, -30% S_Attack, +2с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/skorostrel.png")
                 .bulletSpeedMultiplier(3.5)
-                .fireRatePercent(-50.0)
+                .fireRatePercent(-30.0)
                 .reloadTicksFlat(40L)
                 .build());
 
         register(UpgradeCard.builder(
                 "glass_cannon",
                 "СТЕКЛЯННАЯ ПУШКА",
-                "+100% урона, -60% HP, -0.5с перезарядки"
+                "+100% DMG, -60% HP, -0.5с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/glass_cannon.png")
                 .damageMultiplier(2.0)
                 .maxHealthMultiplier(0.4)
@@ -69,17 +71,17 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "your_mama",
                 "ТВОЯ МАМА",
-                "+80% HP, -1 к боезапасу, -1с перезарядки"
+                "+80% HP, -1с Reload Bullet and Shield"
         ).texturePath("rounds_zero:textures/gui/cards/your_mama.png")
                 .maxHealthMultiplier(1.8)
-                .flatAmmoBonus(-1)
                 .reloadTicksFlat(-20L)
+                .shieldCooldownTicksFlat(-20)
                 .build());
 
         register(UpgradeCard.builder(
                 "fast_gonzales",
                 "БЫСТРЫЙ ГОНЗАЛЕС",
-                "-50% перезарядки патронов"
+                "-50% Reload"
         ).texturePath("rounds_zero:textures/gui/cards/fast_gonzales.png")
                 .reloadPercent(-50.0)
                 .build());
@@ -87,20 +89,21 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "obossivatel",
                 "ОБОССЫВАТЕЛЬ",
-                "+1000% скорости стрельбы, +5 патронов, -50% урона, +1с перезарядки"
+                "+1000% S_Bullet, +17 Ammo, -50% DMG, +3с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/obossivatel.png")
                 .fireRatePercent(1000.0)
-                .flatAmmoBonus(5)
+                .flatAmmoBonus(17)
                 .damageMultiplier(0.5)
-                .reloadTicksFlat(20L)
+                .reloadTicksFlat(60L)
                 .build());
 
         register(UpgradeCard.builder(
                 "tank",
                 "ТАНК",
-                "+100% HP, -25% скорости стрельбы, +0.5с перезарядки"
+                "+100% HP, +20% DMG, -25% S_Attack, +0.5с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/tank.png")
                 .maxHealthMultiplier(2.0)
+                .damageMultiplier(1.2)
                 .fireRatePercent(-25.0)
                 .reloadTicksFlat(10L)
                 .build());
@@ -108,27 +111,27 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "raskrutka",
                 "РАСКРУТКА",
-                "+100% скорости пули, +50% скорости стрельбы, +0.5с перезарядки"
+                "+100% S_Bullet, +50% S_Attack, +1с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
                 .bulletSpeedMultiplier(2.0)
                 .fireRatePercent(50.0)
-                .reloadTicksFlat(10L)
+                .reloadTicksFlat(20L)
                 .build());
 
         register(UpgradeCard.builder(
                 "tochniy_vystrel",
                 "ТОЧНЫЙ ВЫСТРЕЛ",
-                "+30% HP, +100% скорости пули, +0.25с перезарядки"
+                "+30% HP, +150% S_Bullet, +0.25с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/tochniy_vystrel.png")
                 .maxHealthMultiplier(1.3)
-                .bulletSpeedMultiplier(2.0)
+                .bulletSpeedMultiplier(2.5)
                 .reloadTicksFlat(5L)
                 .build());
 
         register(UpgradeCard.builder(
                 "ice_bullets",
                 "ЛЕДЯНЫЕ ПУЛИ",
-                "Пуля накладывает замедление II на 1с, +0.25с перезарядки"
+                "Пули замедляют на 2с. +0.25с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/ice_bullets.png")
                 .reloadTicksFlat(5L)
                 .build());
@@ -136,7 +139,7 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "healing_field",
                 "ЛЕЧАЩЕЕ ПОЛЕ",
-                "При активации щита создаёт поле регенерации, +30% HP, +1с кд щита"
+                "Щит дает Regen, +30% HP, +1с Reload Shield"
         ).texturePath("rounds_zero:textures/gui/cards/healing_field.png")
                 .maxHealthMultiplier(1.3)
                 .shieldCooldownTicksFlat(20)
@@ -145,17 +148,16 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "poison_bullet",
                 "ОТРАВА",
-                "Пуля накладывает отравление III, +10% урона, -15% перезарядки, -1 патрон"
+                "Пуля накладывает отравление, +10% DMG, -20% Reload"
         ).texturePath("rounds_zero:textures/gui/cards/poison_bullet.png")
                 .damageMultiplier(1.1)
-                .reloadPercent(-15.0)
-                .flatAmmoBonus(-1)
+                .reloadPercent(-20.0)
                 .build());
 
         register(UpgradeCard.builder(
                 "poison_cloud",
                 "ЯДОВИТОЕ ОБЛАКО",
-                "Пуля создаёт облако яда, -20% скорости стрельбы, +0.5с перезарядки"
+                "Пуля создаёт облако яда, -20% S_Attack, +0.5с Reload"
         ).texturePath("rounds_zero:textures/gui/cards/poison_cloud.png")
                 .fireRatePercent(-20.0)
                 .reloadTicksFlat(10L)
