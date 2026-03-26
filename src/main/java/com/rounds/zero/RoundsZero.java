@@ -33,7 +33,7 @@ public class RoundsZero implements ModInitializer {
         LOGGER.info("ROUNDS ZERO MOD LOADED!!!");
 
         GAME_MANAGER.addArena(new Arena(
-                "TEST_green",
+                "Bank",
                 new BlockPos(84, -34, 49),   // red
                 new BlockPos(57, -34, 76),   // blue
                 new BlockPos(84, -34, 76),   // green
@@ -41,7 +41,7 @@ public class RoundsZero implements ModInitializer {
         ));
 
         GAME_MANAGER.addArena(new Arena(
-                "TEST_pink",
+                "Reactor",
                 new BlockPos(85, -34, 86),
                 new BlockPos(58, -34, 113),
                 new BlockPos(85, -34, 113),
@@ -54,6 +54,22 @@ public class RoundsZero implements ModInitializer {
                 new BlockPos(128, -34, 112),
                 new BlockPos(153, -34, 112),
                 new BlockPos(128, -34, 87)
+        ));
+
+        GAME_MANAGER.addArena(new Arena(
+                "TrainStation",
+                new BlockPos(118, -34, 87),     // red
+                new BlockPos(118, -34, 112),    // blue
+                new BlockPos(93, -34, 112),    // green
+                new BlockPos(93, -34, 87)      // yellow
+        ));
+
+        GAME_MANAGER.addArena(new Arena(
+                "Garaj",
+                new BlockPos(133, -34, 75),
+                new BlockPos(147, -34, 49),
+                new BlockPos(152, -34, 75),
+                new BlockPos(137, -34, 75)
         ));
 
 
