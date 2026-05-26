@@ -4,19 +4,27 @@ import com.rounds.zero.command.RoundsCommand;
 import com.rounds.zero.game.GameManager;
 import com.rounds.zero.game.arena.Arena;
 import com.rounds.zero.game.combat.CombatManager;
+import com.rounds.zero.game.rules.FriendlyFireHandler;
+import com.rounds.zero.game.rules.WorldInteractionHandler;
 import com.rounds.zero.item.ModWeaponItems;
 import com.rounds.zero.network.ModPackets;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
@@ -96,6 +104,11 @@ public class RoundsZero implements ModInitializer {
                 return false;
             }
 
+            // 4) Friendly fire: запрещаем урон между сокомандниками, если FF выключен
+            if (FriendlyFireHandler.shouldCancelDamage(player, source)) {
+                return false;
+            }
+
             if (!GAME_MANAGER.isPlayerShieldActive(player)) {
                 return true;
             }
@@ -111,6 +124,25 @@ public class RoundsZero implements ModInitializer {
 
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> GAME_MANAGER.handlePlayerRespawn(newPlayer));
 
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            server.execute(() -> GAME_MANAGER.handlePlayerJoin(server, player));
+        });
+
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            if (player == null) {
+                return;
+            }
+            server.execute(() -> GAME_MANAGER.handlePlayerDisconnect(server, player));
+        });
+
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                GAME_MANAGER.handlePlayerJoin(server, player);
+            }
+        });
+
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.SHIELD_USE, (server, player, handler, buf, responseSender) ->
                 server.execute(() -> GAME_MANAGER.handleShieldRequest(player))
         );
@@ -118,6 +150,25 @@ public class RoundsZero implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.RELOAD_WEAPON, (server, player, handler, buf, responseSender) ->
                 server.execute(() -> GAME_MANAGER.handleReloadRequest(player))
         );
+
+        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if (world.isClient || !(player instanceof ServerPlayerEntity serverPlayer)) {
+                return ActionResult.PASS;
+            }
+
+            if (!GAME_MANAGER.shouldBlockWorldInteraction(serverPlayer)) {
+                return ActionResult.PASS;
+            }
+
+            BlockState state = world.getBlockState(hitResult.getBlockPos());
+            BlockEntity blockEntity = world.getBlockEntity(hitResult.getBlockPos());
+
+            if (WorldInteractionHandler.isRestrictedInteraction(state, blockEntity)) {
+                return ActionResult.FAIL;
+            }
+
+            return ActionResult.PASS;
+        });
 
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (world.isClient) {

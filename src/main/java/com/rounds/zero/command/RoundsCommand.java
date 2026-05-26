@@ -2,13 +2,16 @@ package com.rounds.zero.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.rounds.zero.RoundsZero;
 import com.rounds.zero.game.GameState;
 import com.rounds.zero.game.arena.Arena;
+import com.rounds.zero.game.rules.FriendlyFireHandler;
 import com.rounds.zero.game.scoreboard.MatchSidebarManager;
 import com.rounds.zero.game.team.TeamId;
 import com.rounds.zero.game.team.TeamVisualManager;
 import com.rounds.zero.game.upgrade.UpgradeCard;
+import com.rounds.zero.game.upgrade.UpgradeRegistry;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -21,6 +24,42 @@ import java.util.Collection;
 import java.util.List;
 
 public class RoundsCommand {
+
+    private static int setFriendlyFire(ServerCommandSource source, boolean enabled) {
+        FriendlyFireHandler.setEnabled(enabled);
+
+        if (enabled) {
+            source.sendFeedback(() -> Text.literal("Friendly fire включён.").formatted(Formatting.GREEN), true);
+        } else {
+            source.sendFeedback(() -> Text.literal("Friendly fire выключен.").formatted(Formatting.GRAY), true);
+        }
+
+        return 1;
+    }
+
+    private static int reportFriendlyFireStatus(ServerCommandSource source) {
+        boolean enabled = FriendlyFireHandler.isEnabled();
+        Formatting color = enabled ? Formatting.GREEN : Formatting.GRAY;
+
+        source.sendFeedback(
+                () -> Text.literal("Friendly fire: ")
+                        .append(Text.literal(enabled ? "ON" : "OFF").formatted(color)),
+                false
+        );
+
+        return enabled ? 1 : 0;
+    }
+
+    private static int debugWinTeam(ServerCommandSource source, TeamId teamId) {
+        if (RoundsZero.GAME_MANAGER.getGameState() != GameState.ROUND_ACTIVE) {
+            source.sendError(Text.literal("Сейчас нет активного раунда."));
+            return 0;
+        }
+
+        RoundsZero.GAME_MANAGER.debugWinRound(source.getServer(), teamId);
+        MatchSidebarManager.updateSidebar(source.getServer());
+        return 1;
+    }
 
     private static int joinPlayersToTeam(ServerCommandSource source, Collection<ServerPlayerEntity> targets, TeamId teamId, String successMessage) {
         for (ServerPlayerEntity player : targets) {
@@ -217,27 +256,13 @@ public class RoundsCommand {
                         .then(CommandManager.literal("debug")
                                 .then(CommandManager.literal("win")
                                         .then(CommandManager.literal("red")
-                                                .executes(context -> {
-                                                    if (RoundsZero.GAME_MANAGER.getGameState() != GameState.ROUND_ACTIVE) {
-                                                        context.getSource().sendError(Text.literal("Сейчас нет активного раунда."));
-                                                        return 0;
-                                                    }
-
-                                                    RoundsZero.GAME_MANAGER.debugWinRound(context.getSource().getServer(), TeamId.RED);
-                                                    MatchSidebarManager.updateSidebar(context.getSource().getServer());
-                                                    return 1;
-                                                }))
+                                                .executes(context -> debugWinTeam(context.getSource(), TeamId.RED)))
                                         .then(CommandManager.literal("blue")
-                                                .executes(context -> {
-                                                    if (RoundsZero.GAME_MANAGER.getGameState() != GameState.ROUND_ACTIVE) {
-                                                        context.getSource().sendError(Text.literal("Сейчас нет активного раунда."));
-                                                        return 0;
-                                                    }
-
-                                                    RoundsZero.GAME_MANAGER.debugWinRound(context.getSource().getServer(), TeamId.BLUE);
-                                                    MatchSidebarManager.updateSidebar(context.getSource().getServer());
-                                                    return 1;
-                                                })))
+                                                .executes(context -> debugWinTeam(context.getSource(), TeamId.BLUE)))
+                                        .then(CommandManager.literal("green")
+                                                .executes(context -> debugWinTeam(context.getSource(), TeamId.GREEN)))
+                                        .then(CommandManager.literal("yellow")
+                                                .executes(context -> debugWinTeam(context.getSource(), TeamId.YELLOW))))
                                 .then(CommandManager.literal("upgrades")
                                         .then(CommandManager.literal("done")
                                                 .executes(context -> {
@@ -256,6 +281,58 @@ public class RoundsCommand {
 
                                                     return 1;
                                                 }))))
+
+                        .then(CommandManager.literal("grantupgrade")
+                                .then(CommandManager.literal("list")
+                                        .executes(context -> {
+                                            for (UpgradeCard card : UpgradeRegistry.getAllCards()) {
+                                                context.getSource().sendFeedback(
+                                                        () -> Text.literal(card.getId())
+                                                                .append(Text.literal(" — "))
+                                                                .append(Text.literal(card.getTitle()).formatted(Formatting.AQUA)),
+                                                        false
+                                                );
+                                            }
+                                            return UpgradeRegistry.getAllCards().size();
+                                        }))
+                                .then(CommandManager.argument("target", EntityArgumentType.player())
+                                        .then(CommandManager.argument("cardId", StringArgumentType.string())
+                                                .executes(context -> {
+                                                    ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "target");
+                                                    String cardId = StringArgumentType.getString(context, "cardId");
+
+                                                    boolean success = RoundsZero.GAME_MANAGER.grantUpgrade(player, cardId);
+                                                    if (!success) {
+                                                        context.getSource().sendError(
+                                                                Text.literal("Карта не найдена: " + cardId + ". Список: /rounds grantupgrade list")
+                                                        );
+                                                        return 0;
+                                                    }
+
+                                                    UpgradeCard card = UpgradeRegistry.findById(cardId);
+                                                    context.getSource().sendFeedback(
+                                                            () -> Text.literal("Игроку ")
+                                                                    .append(Text.literal(player.getName().getString()).formatted(Formatting.YELLOW))
+                                                                    .append(Text.literal(" выдана карта: "))
+                                                                    .append(Text.literal(card.getTitle()).formatted(Formatting.GOLD)),
+                                                            true
+                                                    );
+                                                    player.sendMessage(
+                                                            Text.literal("Тебе выдано улучшение: ")
+                                                                    .append(Text.literal(card.getTitle()).formatted(Formatting.GOLD)),
+                                                            false
+                                                    );
+                                                    return 1;
+                                                }))))
+
+                        .then(CommandManager.literal("friendlyfire")
+                                .executes(context -> reportFriendlyFireStatus(context.getSource()))
+                                .then(CommandManager.literal("on")
+                                        .executes(context -> setFriendlyFire(context.getSource(), true)))
+                                .then(CommandManager.literal("off")
+                                        .executes(context -> setFriendlyFire(context.getSource(), false)))
+                                .then(CommandManager.literal("status")
+                                        .executes(context -> reportFriendlyFireStatus(context.getSource()))))
 
                         .then(CommandManager.literal("config")
                                 .then(CommandManager.literal("rounds_to_win")

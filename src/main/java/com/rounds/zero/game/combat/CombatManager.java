@@ -6,6 +6,7 @@ import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.particle.DustParticleEffect;
@@ -32,6 +33,8 @@ public class CombatManager {
     private static final Vector3f POISON_COLOR = new Vector3f(0.10f, 0.35f, 0.10f);
     private static final Vector3f RED_TEAM_COLOR = new Vector3f(0.95f, 0.20f, 0.20f);
     private static final Vector3f BLUE_TEAM_COLOR = new Vector3f(0.20f, 0.45f, 0.95f);
+    private static final Vector3f GREEN_TEAM_COLOR = new Vector3f(0.20f, 0.85f, 0.30f);
+    private static final Vector3f YELLOW_TEAM_COLOR = new Vector3f(0.95f, 0.90f, 0.20f);
 
     private final Map<UUID, PlayerCombatData> playerCombatData = new HashMap<>();
     private final List<ActiveField> activeFields = new ArrayList<>();
@@ -77,6 +80,7 @@ public class CombatManager {
         data.setShieldActive(false);
         data.setShieldEndTick(0L);
         data.setShieldCooldownEndTick(0L);
+        data.setHealingFieldCooldownEndTick(0L);
 
         applyResolvedStatsToPlayer(player, resolvedStats);
         sendCombatStatus(player, data, player.getServerWorld().getTime());
@@ -102,8 +106,28 @@ public class CombatManager {
         data.setShieldActive(false);
         data.setShieldEndTick(0L);
         data.setShieldCooldownEndTick(0L);
+        data.setHealingFieldCooldownEndTick(0L);
 
         applyResolvedStatsToPlayer(player, defaultStats);
+    }
+
+    public void clearRoundProjectiles(MinecraftServer server) {
+        activeFields.clear();
+
+        for (ServerWorld world : server.getWorlds()) {
+            List<Entity> toRemove = new ArrayList<>();
+
+            for (Entity entity : world.iterateEntities()) {
+                if (entity instanceof PersistentProjectileEntity projectile
+                        && projectile.getCommandTags().contains(ROUNDS_BULLET_TAG)) {
+                    toRemove.add(entity);
+                }
+            }
+
+            for (Entity entity : toRemove) {
+                entity.discard();
+            }
+        }
     }
 
     private void applyResolvedStatsToPlayer(ServerPlayerEntity player, CombatStats stats) {
@@ -135,12 +159,24 @@ public class CombatManager {
         }
 
         CombatStats stats = data.getStats();
+
+        if (stats.getHealingFieldLifetimeTicks() > 0 && now < data.getHealingFieldCooldownEndTick()) {
+            long remainingTicks = data.getHealingFieldCooldownEndTick() - now;
+            double seconds = remainingTicks / 20.0;
+            player.sendMessage(
+                    Text.literal(String.format("Лечение в кулдауне: %.1f сек.", seconds)).formatted(Formatting.RED),
+                    true
+            );
+            return;
+        }
+
         data.setShieldActive(true);
         data.setShieldEndTick(now + stats.getShieldDurationTicks());
         data.setShieldCooldownEndTick(now + stats.getShieldCooldownTicks());
 
         if (stats.getHealingFieldLifetimeTicks() > 0) {
             spawnHealingField(player, stats, now);
+            data.setHealingFieldCooldownEndTick(now + stats.getHealingFieldCooldownTicks());
         }
 
         player.sendMessage(Text.literal("Щит активирован.").formatted(Formatting.AQUA), true);
@@ -201,20 +237,24 @@ public class CombatManager {
         }
     }
 
+    private static final double TRIPLE_SHOT_SPACING = 0.22;
+
     private void fireBullet(ServerPlayerEntity player, CombatStats stats) {
-        ArrowEntity bullet = new ArrowEntity(player.getWorld(), player);
-        bullet.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
-        bullet.setNoGravity(true);
-        bullet.setCritical(false);
-        bullet.setDamage(stats.getBulletDamage());
-        bullet.addCommandTag(ROUNDS_BULLET_TAG);
+        int projectileCount = Math.max(1, stats.getProjectilesPerShot());
+        Vec3d lookDirection = player.getRotationVec(1.0f).normalize();
+        Vec3d strafeAxis = lookDirection.crossProduct(new Vec3d(0.0, 1.0, 0.0));
 
-        Vec3d rotation = player.getRotationVec(1.0f).normalize();
-        Vec3d spawnPos = player.getEyePos().add(rotation.multiply(0.35));
-        bullet.setPosition(spawnPos.x, spawnPos.y, spawnPos.z);
-        bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0.0f, (float) stats.getBulletSpeed(), 0.0f);
+        if (strafeAxis.lengthSquared() < 1.0E-6) {
+            strafeAxis = lookDirection.crossProduct(new Vec3d(1.0, 0.0, 0.0));
+        }
 
-        player.getWorld().spawnEntity(bullet);
+        strafeAxis = strafeAxis.normalize();
+
+        for (int index = 0; index < projectileCount; index++) {
+            double lateralOffset = (index - (projectileCount - 1) / 2.0) * TRIPLE_SHOT_SPACING;
+            spawnBullet(player, stats, strafeAxis.multiply(lateralOffset));
+        }
+
         player.getWorld().playSound(
                 null,
                 player.getX(),
@@ -225,6 +265,22 @@ public class CombatManager {
                 0.9f,
                 1.4f
         );
+    }
+
+    private void spawnBullet(ServerPlayerEntity player, CombatStats stats, Vec3d lateralOffset) {
+        ArrowEntity bullet = new ArrowEntity(player.getWorld(), player);
+        bullet.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;
+        bullet.setNoGravity(true);
+        bullet.setCritical(false);
+        bullet.setDamage(stats.getBulletDamage());
+        bullet.addCommandTag(ROUNDS_BULLET_TAG);
+
+        Vec3d lookDirection = player.getRotationVec(1.0f).normalize();
+        Vec3d spawnPos = player.getEyePos().add(lookDirection.multiply(0.35)).add(lateralOffset);
+        bullet.setPosition(spawnPos.x, spawnPos.y, spawnPos.z);
+        bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0.0f, (float) stats.getBulletSpeed(), 0.0f);
+
+        player.getWorld().spawnEntity(bullet);
     }
 
     public void handleProjectileHitEntity(PersistentProjectileEntity projectile, ServerPlayerEntity shooter, ServerPlayerEntity target) {
@@ -254,6 +310,10 @@ public class CombatManager {
                         stats.getBlindnessDurationTicks(),
                         0
                 ));
+            }
+
+            if (stats.getFireOnHitDurationTicks() > 0) {
+                target.setFireTicks(Math.max(target.getFireTicks(), stats.getFireOnHitDurationTicks()));
             }
         }
 
@@ -421,10 +481,12 @@ public class CombatManager {
     }
 
     private Vector3f getTeamColor(TeamId teamId) {
-        if (teamId == TeamId.BLUE) {
-            return BLUE_TEAM_COLOR;
-        }
-        return RED_TEAM_COLOR;
+        return switch (teamId) {
+            case BLUE -> BLUE_TEAM_COLOR;
+            case GREEN -> GREEN_TEAM_COLOR;
+            case YELLOW -> YELLOW_TEAM_COLOR;
+            default -> RED_TEAM_COLOR;
+        };
     }
 
     private void sendCombatStatus(ServerPlayerEntity player, PlayerCombatData data, long now) {
@@ -434,24 +496,46 @@ public class CombatManager {
     private MutableText buildCombatStatusText(PlayerCombatData data, long now) {
         MutableText ammoText;
         if (data.isReloading()) {
-            ammoText = Text.literal("ПЕРЕЗАРЯДКА").formatted(Formatting.YELLOW);
+            ammoText = Text.literal("Перезарядка: ")
+                    .formatted(Formatting.YELLOW)
+                    .append(Text.literal(formatSecondsRemaining(data.getReloadEndTick(), now) + "с").formatted(Formatting.GOLD));
         } else {
             ammoText = Text.literal("Патроны: " + data.getCurrentAmmo() + "/" + data.getStats().getMaxAmmo())
                     .formatted(Formatting.GOLD);
         }
 
         MutableText separator = Text.literal(" | ").formatted(Formatting.DARK_GRAY);
-
-        MutableText shieldText;
-        if (data.isShieldActive()) {
-            shieldText = Text.literal("АКТИВЕН").formatted(Formatting.AQUA);
-        } else if (now < data.getShieldCooldownEndTick()) {
-            shieldText = Text.literal("ПЕРЕЗАРЯДКА").formatted(Formatting.RED);
-        } else {
-            shieldText = Text.literal("Щит: ГОТОВ").formatted(Formatting.GREEN);
-        }
+        MutableText shieldText = buildShieldStatusText(data, now);
 
         return ammoText.append(separator).append(shieldText);
+    }
+
+    private MutableText buildShieldStatusText(PlayerCombatData data, long now) {
+        CombatStats stats = data.getStats();
+
+        if (data.isShieldActive()) {
+            return Text.literal("Щит: ")
+                    .formatted(Formatting.AQUA)
+                    .append(Text.literal(formatSecondsRemaining(data.getShieldEndTick(), now) + "с").formatted(Formatting.WHITE));
+        }
+
+        long shieldReadyTick = data.getShieldCooldownEndTick();
+        if (stats.getHealingFieldLifetimeTicks() > 0) {
+            shieldReadyTick = Math.max(shieldReadyTick, data.getHealingFieldCooldownEndTick());
+        }
+
+        if (now < shieldReadyTick) {
+            return Text.literal("Щит: ")
+                    .formatted(Formatting.RED)
+                    .append(Text.literal(formatSecondsRemaining(shieldReadyTick, now) + "с").formatted(Formatting.GOLD));
+        }
+
+        return Text.literal("Щит: ГОТОВ").formatted(Formatting.GREEN);
+    }
+
+    private static String formatSecondsRemaining(long endTick, long now) {
+        long remainingTicks = Math.max(0L, endTick - now);
+        return String.format("%.1f", remainingTicks / 20.0);
     }
 
     private enum FieldEffectType {

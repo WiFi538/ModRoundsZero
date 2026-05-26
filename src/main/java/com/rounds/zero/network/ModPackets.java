@@ -2,6 +2,8 @@ package com.rounds.zero.network;
 
 import com.rounds.zero.RoundsZero;
 import com.rounds.zero.game.upgrade.UpgradeCard;
+import com.rounds.zero.game.upgrade.UpgradeCardCategory;
+import com.rounds.zero.game.upgrade.UpgradeCardCategoryResolver;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -37,9 +39,18 @@ public final class ModPackets {
             buf.writeString(card.getId());
             buf.writeString(card.getTitle());
             buf.writeString(card.getDescription());
-            buf.writeString(card.getTexturePath());
+            buf.writeString(toWireCategoryId(UpgradeCardCategoryResolver.resolve(card)));
         }
 
         ServerPlayNetworking.send(player, OPEN_UPGRADE_SCREEN, buf);
+    }
+
+    private static String toWireCategoryId(UpgradeCardCategory category) {
+        return switch (category) {
+            case HEALTH -> "health";
+            case BULLET_EFFECT -> "bullet";
+            case SHIELD_EFFECT -> "shield";
+            default -> "weapon";
+        };
     }
 }

@@ -21,7 +21,7 @@ public class UpgradeClientPackets {
                         buf.readString(),
                         buf.readString(),
                         buf.readString(),
-                        buf.readString()
+                        UpgradeSelectScreen.CardCategory.fromWireId(buf.readString())
                 ));
             }
 

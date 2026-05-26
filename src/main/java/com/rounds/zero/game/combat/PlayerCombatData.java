@@ -13,6 +13,7 @@ public class PlayerCombatData {
     private boolean shieldActive = false;
     private long shieldEndTick = 0L;
     private long shieldCooldownEndTick = 0L;
+    private long healingFieldCooldownEndTick = 0L;
 
     public CombatStats getStats() {
         return stats;
@@ -79,5 +80,13 @@ public class PlayerCombatData {
 
     public void setShieldCooldownEndTick(long shieldCooldownEndTick) {
         this.shieldCooldownEndTick = shieldCooldownEndTick;
+    }
+
+    public long getHealingFieldCooldownEndTick() {
+        return healingFieldCooldownEndTick;
+    }
+
+    public void setHealingFieldCooldownEndTick(long healingFieldCooldownEndTick) {
+        this.healingFieldCooldownEndTick = healingFieldCooldownEndTick;
     }
 }

@@ -4,6 +4,7 @@ import com.rounds.zero.game.arena.Arena;
 import com.rounds.zero.game.combat.CombatManager;
 import com.rounds.zero.game.combat.CombatStats;
 import com.rounds.zero.game.team.TeamId;
+import com.rounds.zero.game.team.TeamVisualManager;
 import com.rounds.zero.game.upgrade.PlayerUpgradeData;
 import com.rounds.zero.game.upgrade.UpgradeCard;
 import com.rounds.zero.game.upgrade.UpgradeEffectResolver;
@@ -73,7 +74,53 @@ public class GameManager {
     }
 
     public void tickCombat(MinecraftServer server) {
+        if (server.getOverworld().getTime() % 20L == 0L) {
+            enforceGameModes(server);
+        }
         combatManager.tick(server);
+    }
+
+    public boolean shouldBlockWorldInteraction(ServerPlayerEntity player) {
+        return hasTeam(player);
+    }
+
+    private void enforceGameModes(MinecraftServer server) {
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (!hasTeam(player)) {
+                if (gameState == GameState.WAITING && player.interactionManager.getGameMode() != GameMode.ADVENTURE) {
+                    player.changeGameMode(GameMode.ADVENTURE);
+                }
+                continue;
+            }
+
+            switch (gameState) {
+                case WAITING -> {
+                    if (player.interactionManager.getGameMode() != GameMode.ADVENTURE) {
+                        player.changeGameMode(GameMode.ADVENTURE);
+                    }
+                }
+                case ROUND_ACTIVE -> {
+                    if (!isAliveInRound(player)) {
+                        if (player.interactionManager.getGameMode() != GameMode.SPECTATOR) {
+                            player.changeGameMode(GameMode.SPECTATOR);
+                        }
+                    } else if (player.interactionManager.getGameMode() != GameMode.ADVENTURE) {
+                        player.changeGameMode(GameMode.ADVENTURE);
+                    }
+                }
+                case UPGRADE_SELECTION -> {
+                    if (isWaitingForUpgradeChoice(player)) {
+                        if (player.interactionManager.getGameMode() != GameMode.SPECTATOR) {
+                            player.changeGameMode(GameMode.SPECTATOR);
+                        }
+                    } else if (player.interactionManager.getGameMode() != GameMode.ADVENTURE) {
+                        player.changeGameMode(GameMode.ADVENTURE);
+                    }
+                }
+                default -> {
+                }
+            }
+        }
     }
 
     public void handleShieldRequest(ServerPlayerEntity player) {
@@ -218,6 +265,22 @@ public class GameManager {
         return data.getOwnedUpgrades();
     }
 
+    public boolean grantUpgrade(ServerPlayerEntity player, String cardId) {
+        UpgradeCard card = UpgradeRegistry.findById(cardId);
+        if (card == null) {
+            return false;
+        }
+
+        playerUpgradeData.computeIfAbsent(player.getUuid(), uuid -> new PlayerUpgradeData()).addUpgrade(card);
+
+        if (gameState == GameState.ROUND_ACTIVE && hasTeam(player) && isAliveInRound(player)) {
+            CombatStats resolvedStats = UpgradeEffectResolver.resolve(getOwnedUpgrades(player));
+            combatManager.preparePlayerForNewRound(player, resolvedStats);
+        }
+
+        return true;
+    }
+
     public void forceFinishUpgradeSelection(MinecraftServer server) {
         if (gameState != GameState.UPGRADE_SELECTION) {
             return;
@@ -268,15 +331,72 @@ public class GameManager {
                 false
         );
 
-        if (playersWaitingForUpgradeChoice.isEmpty()) {
-            broadcastMessage(server, Text.literal("Все проигравшие игроки выбрали улучшения. Следующий раунд начинается!").formatted(Formatting.GREEN));
-            pendingUpgradeLoserTeam = TeamId.NONE;
-            pendingUpgradeWinnerTeam = TeamId.NONE;
-            currentUpgradeOffers.clear();
-            startNextRound(server);
-        }
+        advanceIfUpgradeSelectionDone(server);
 
         return true;
+    }
+
+    private void advanceIfUpgradeSelectionDone(MinecraftServer server) {
+        if (gameState != GameState.UPGRADE_SELECTION) {
+            return;
+        }
+
+        if (!playersWaitingForUpgradeChoice.isEmpty()) {
+            return;
+        }
+
+        broadcastMessage(server, Text.literal("Все проигравшие игроки выбрали улучшения. Следующий раунд начинается!").formatted(Formatting.GREEN));
+        pendingUpgradeLoserTeam = TeamId.NONE;
+        pendingUpgradeWinnerTeam = TeamId.NONE;
+        currentUpgradeOffers.clear();
+        startNextRound(server);
+    }
+
+    public void handlePlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
+        clearPlayerTeam(player);
+        TeamVisualManager.clearPlayerTeam(server, player);
+        sendPlayerToLobby(server, player);
+    }
+
+    public void handlePlayerDisconnect(MinecraftServer server, ServerPlayerEntity player) {
+        if (!hasTeam(player)) {
+            return;
+        }
+
+        boolean wasAliveInRound = alivePlayers.contains(player.getUuid());
+        boolean wasWaitingForUpgrade = playersWaitingForUpgradeChoice.contains(player.getUuid());
+
+        clearPlayerTeam(player);
+        TeamVisualManager.clearPlayerTeam(server, player);
+
+        if (wasAliveInRound) {
+            checkRoundWinByElimination(server);
+        }
+
+        if (wasWaitingForUpgrade) {
+            advanceIfUpgradeSelectionDone(server);
+        }
+    }
+
+    public void sendPlayerToLobby(MinecraftServer server, ServerPlayerEntity player) {
+        combatManager.resetPlayerToDefault(player);
+
+        player.changeGameMode(GameMode.ADVENTURE);
+        player.getInventory().clear();
+        player.setHealth(player.getMaxHealth());
+        player.getHungerManager().setFoodLevel(20);
+        player.getHungerManager().setSaturationLevel(20.0f);
+        player.clearStatusEffects();
+        player.setFireTicks(0);
+
+        player.teleport(
+                server.getOverworld(),
+                lobbySpawn.getX() + 0.5,
+                lobbySpawn.getY(),
+                lobbySpawn.getZ() + 0.5,
+                player.getYaw(),
+                player.getPitch()
+        );
     }
 
     public void handlePlayerDeath(MinecraftServer server, ServerPlayerEntity player) {
@@ -410,6 +530,7 @@ public class GameManager {
         }
 
         setGameState(GameState.ROUND_END);
+        combatManager.clearRoundProjectiles(server);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (hasTeam(player)) {
@@ -593,17 +714,7 @@ public class GameManager {
         pendingUpgradeWinnerTeam = TeamId.NONE;
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            combatManager.resetPlayerToDefault(player);
-            player.changeGameMode(GameMode.SURVIVAL);
-
-            player.teleport(
-                    server.getOverworld(),
-                    lobbySpawn.getX() + 0.5,
-                    lobbySpawn.getY(),
-                    lobbySpawn.getZ() + 0.5,
-                    player.getYaw(),
-                    player.getPitch()
-            );
+            sendPlayerToLobby(server, player);
         }
 
         MatchSidebarManager.removeSidebar(server);
@@ -637,6 +748,7 @@ public class GameManager {
 
         setCurrentArena(randomArena);
         setGameState(GameState.ROUND_ACTIVE);
+        combatManager.clearRoundProjectiles(server);
 
         alivePlayers.clear();
         playersWaitingForUpgradeChoice.clear();

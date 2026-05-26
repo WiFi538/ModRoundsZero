@@ -20,6 +20,7 @@ public final class UpgradeEffectResolver {
         int poisonBulletCount = 0;
         int poisonCloudCount = 0;
         int blindnessCount = 0;
+        boolean hasSniper = false;
 
         for (UpgradeCard card : cards) {
             if (card == null) {
@@ -34,9 +35,16 @@ public final class UpgradeEffectResolver {
                 case "poison_bullet" -> poisonBulletCount++;
                 case "poison_cloud" -> poisonCloudCount++;
                 case "blindness_bullets" -> blindnessCount++;
+                case "triple_shot" -> stats.setProjectilesPerShot(Math.max(stats.getProjectilesPerShot(), 3));
+                case "fire_shot" -> stats.setFireOnHitDurationTicks(Math.max(stats.getFireOnHitDurationTicks(), 60));
+                case "sniper" -> hasSniper = true;
                 default -> {
                 }
             }
+        }
+
+        if (hasSniper) {
+            stats.setMaxAmmo(1);
         }
 
         if (iceBulletsCount > 0) {
@@ -44,10 +52,11 @@ public final class UpgradeEffectResolver {
         }
 
         if (healingFieldCount > 0) {
-            stats.setHealingFieldRadius(2);
-            stats.setHealingFieldLifetimeTicks(40);
-            stats.setHealingFieldEffectDurationTicks(100 + ((healingFieldCount - 1) * 20));
-            stats.setHealingFieldAmplifier(2);
+            stats.setHealingFieldRadius(1);
+            stats.setHealingFieldLifetimeTicks(25);
+            stats.setHealingFieldEffectDurationTicks(50 + ((healingFieldCount - 1) * 10));
+            stats.setHealingFieldAmplifier(1);
+            stats.setHealingFieldCooldownTicks(160L);
         }
 
         if (poisonBulletCount > 0) {
@@ -103,6 +112,7 @@ public final class UpgradeEffectResolver {
     }
 
     private static CombatStats clamp(CombatStats stats) {
+        stats.setProjectilesPerShot(Math.max(1, stats.getProjectilesPerShot()));
         stats.setMaxAmmo(Math.max(1, stats.getMaxAmmo()));
         stats.setShotCooldownTicks(Math.max(1L, stats.getShotCooldownTicks()));
         stats.setReloadDurationTicks(Math.max(1L, stats.getReloadDurationTicks()));

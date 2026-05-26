@@ -7,10 +7,10 @@ public class CombatStats {
     private long reloadDurationTicks = 60L;
 
     private double bulletDamage = 3.0;
-    private double bulletSpeed = 1.0;
+    private double bulletSpeed = 1.65;
     private double bulletSize = 1.0;
 
-    private long shieldDurationTicks = 30L;
+    private long shieldDurationTicks = 140L;
     private long shieldCooldownTicks = 100L;
 
     private double maxHealth = 20.0;
@@ -31,6 +31,10 @@ public class CombatStats {
     private int healingFieldLifetimeTicks = 0;
     private int healingFieldEffectDurationTicks = 0;
     private int healingFieldAmplifier = 0;
+    private long healingFieldCooldownTicks = 0L;
+
+    private int projectilesPerShot = 1;
+    private int fireOnHitDurationTicks = 0;
 
     public static CombatStats createDefault() {
         return new CombatStats();
@@ -60,6 +64,9 @@ public class CombatStats {
         copy.healingFieldLifetimeTicks = this.healingFieldLifetimeTicks;
         copy.healingFieldEffectDurationTicks = this.healingFieldEffectDurationTicks;
         copy.healingFieldAmplifier = this.healingFieldAmplifier;
+        copy.healingFieldCooldownTicks = this.healingFieldCooldownTicks;
+        copy.projectilesPerShot = this.projectilesPerShot;
+        copy.fireOnHitDurationTicks = this.fireOnHitDurationTicks;
         return copy;
     }
 
@@ -237,5 +244,29 @@ public class CombatStats {
 
     public void setHealingFieldAmplifier(int healingFieldAmplifier) {
         this.healingFieldAmplifier = healingFieldAmplifier;
+    }
+
+    public long getHealingFieldCooldownTicks() {
+        return healingFieldCooldownTicks;
+    }
+
+    public void setHealingFieldCooldownTicks(long healingFieldCooldownTicks) {
+        this.healingFieldCooldownTicks = healingFieldCooldownTicks;
+    }
+
+    public int getProjectilesPerShot() {
+        return projectilesPerShot;
+    }
+
+    public void setProjectilesPerShot(int projectilesPerShot) {
+        this.projectilesPerShot = projectilesPerShot;
+    }
+
+    public int getFireOnHitDurationTicks() {
+        return fireOnHitDurationTicks;
+    }
+
+    public void setFireOnHitDurationTicks(int fireOnHitDurationTicks) {
+        this.fireOnHitDurationTicks = fireOnHitDurationTicks;
     }
 }
