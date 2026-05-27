@@ -1,0 +1,48 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "rounds_zero:item/pistol"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [ -12, 90, 58 ],
+      "translation": [ 0, 1.75, -2.75 ],
+      "scale": [ 0.78, 0.78, 0.78 ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [ -12, -90, -58 ],
+      "translation": [ 0, 1.75, -2.75 ],
+      "scale": [ 0.78, 0.78, 0.78 ]
+    },
+    "firstperson_righthand": {
+      "rotation": [ 0, 96, 8 ],
+      "translation": [ 0.95, 1.85, 0.15 ],
+      "scale": [ 0.82, 0.82, 0.82 ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [ 0, -96, -8 ],
+      "translation": [ 0.95, 1.85, 0.15 ],
+      "scale": [ 0.82, 0.82, 0.82 ]
+    },
+    "ground": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ 0, 2, 0 ],
+      "scale": [ 0.45, 0.45, 0.45 ]
+    },
+    "gui": {
+      "rotation": [ 30, 225, 0 ],
+      "translation": [ 0, 0, 0 ],
+      "scale": [ 0.9, 0.9, 0.9 ]
+    },
+    "fixed": {
+      "rotation": [ 0, 180, 0 ],
+      "translation": [ 0, 0, 0 ],
+      "scale": [ 1, 1, 1 ]
+    },
+    "head": {
+      "rotation": [ 0, 180, 0 ],
+      "translation": [ 0, 13, 7 ],
+      "scale": [ 1, 1, 1 ]
+    }
+  }
+}

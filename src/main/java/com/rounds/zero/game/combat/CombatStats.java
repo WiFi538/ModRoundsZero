@@ -6,7 +6,7 @@ public class CombatStats {
     private long shotCooldownTicks = 20L;
     private long reloadDurationTicks = 60L;
 
-    private double bulletDamage = 3.0;
+    private double bulletDamage = 4.0;
     private double bulletSpeed = 1.65;
     private double bulletSize = 1.0;
 
@@ -35,6 +35,51 @@ public class CombatStats {
 
     private int projectilesPerShot = 1;
     private int fireOnHitDurationTicks = 0;
+
+    private boolean cursedBullet = false;
+    private int cursedGlowDurationTicks = 0;
+    private float cursedExplosionPower = 0.0f;
+
+    private boolean parasite = false;
+
+    private boolean jackpot = false;
+    private int jackpotChancePercent = 0;
+    private int jackpotDurationTicks = 0;
+
+    private boolean thor = false;
+    private int thorChancePercent = 0;
+    private float thorDamage = 0.0f;
+
+    private boolean underSpeed = false;
+    private int underSpeedDurationTicks = 0;
+    private int underSpeedAmplifier = 0;
+
+    private boolean dep = false;
+    private int depChancePercent = 0;
+    private double depTargetBonusMultiplier = 1.0;
+    private double depSelfBonusMultiplier = 0.0;
+
+    private boolean timeJump = false;
+    private int timeJumpChancePercent = 0;
+
+    private boolean summoner = false;
+    private int summonerLimitPerPlayer = 0;
+    private float summonerZombieDamage = 0.0f;
+
+    private boolean parasiteSummonerSynergy = false;
+    private boolean depJackpotSynergy = false;
+    private boolean healingFieldSurge = false;
+
+    private boolean ghostRider = false;
+
+    private boolean bombShield = false;
+    private float bombShieldDamage = 10.0f;
+    private double bombShieldRadius = 1.5;
+    private long bombShieldExtraCooldownTicks = 100L;
+
+    private boolean kaboom = false;
+    private float kaboomDamage = 4.0f;
+    private double kaboomRadius = 1.5;
 
     public static CombatStats createDefault() {
         return new CombatStats();
@@ -67,6 +112,39 @@ public class CombatStats {
         copy.healingFieldCooldownTicks = this.healingFieldCooldownTicks;
         copy.projectilesPerShot = this.projectilesPerShot;
         copy.fireOnHitDurationTicks = this.fireOnHitDurationTicks;
+        copy.cursedBullet = this.cursedBullet;
+        copy.cursedGlowDurationTicks = this.cursedGlowDurationTicks;
+        copy.cursedExplosionPower = this.cursedExplosionPower;
+        copy.parasite = this.parasite;
+        copy.jackpot = this.jackpot;
+        copy.jackpotChancePercent = this.jackpotChancePercent;
+        copy.jackpotDurationTicks = this.jackpotDurationTicks;
+        copy.thor = this.thor;
+        copy.thorChancePercent = this.thorChancePercent;
+        copy.thorDamage = this.thorDamage;
+        copy.underSpeed = this.underSpeed;
+        copy.underSpeedDurationTicks = this.underSpeedDurationTicks;
+        copy.underSpeedAmplifier = this.underSpeedAmplifier;
+        copy.dep = this.dep;
+        copy.depChancePercent = this.depChancePercent;
+        copy.depTargetBonusMultiplier = this.depTargetBonusMultiplier;
+        copy.depSelfBonusMultiplier = this.depSelfBonusMultiplier;
+        copy.timeJump = this.timeJump;
+        copy.timeJumpChancePercent = this.timeJumpChancePercent;
+        copy.summoner = this.summoner;
+        copy.summonerLimitPerPlayer = this.summonerLimitPerPlayer;
+        copy.summonerZombieDamage = this.summonerZombieDamage;
+        copy.parasiteSummonerSynergy = this.parasiteSummonerSynergy;
+        copy.depJackpotSynergy = this.depJackpotSynergy;
+        copy.healingFieldSurge = this.healingFieldSurge;
+        copy.ghostRider = this.ghostRider;
+        copy.bombShield = this.bombShield;
+        copy.bombShieldDamage = this.bombShieldDamage;
+        copy.bombShieldRadius = this.bombShieldRadius;
+        copy.bombShieldExtraCooldownTicks = this.bombShieldExtraCooldownTicks;
+        copy.kaboom = this.kaboom;
+        copy.kaboomDamage = this.kaboomDamage;
+        copy.kaboomRadius = this.kaboomRadius;
         return copy;
     }
 
@@ -268,5 +346,269 @@ public class CombatStats {
 
     public void setFireOnHitDurationTicks(int fireOnHitDurationTicks) {
         this.fireOnHitDurationTicks = fireOnHitDurationTicks;
+    }
+
+    public boolean isCursedBullet() {
+        return cursedBullet;
+    }
+
+    public void setCursedBullet(boolean cursedBullet) {
+        this.cursedBullet = cursedBullet;
+    }
+
+    public int getCursedGlowDurationTicks() {
+        return cursedGlowDurationTicks;
+    }
+
+    public void setCursedGlowDurationTicks(int cursedGlowDurationTicks) {
+        this.cursedGlowDurationTicks = cursedGlowDurationTicks;
+    }
+
+    public float getCursedExplosionPower() {
+        return cursedExplosionPower;
+    }
+
+    public void setCursedExplosionPower(float cursedExplosionPower) {
+        this.cursedExplosionPower = cursedExplosionPower;
+    }
+
+    public boolean isParasite() {
+        return parasite;
+    }
+
+    public void setParasite(boolean parasite) {
+        this.parasite = parasite;
+    }
+
+    public boolean isJackpot() {
+        return jackpot;
+    }
+
+    public void setJackpot(boolean jackpot) {
+        this.jackpot = jackpot;
+    }
+
+    public int getJackpotChancePercent() {
+        return jackpotChancePercent;
+    }
+
+    public void setJackpotChancePercent(int jackpotChancePercent) {
+        this.jackpotChancePercent = jackpotChancePercent;
+    }
+
+    public int getJackpotDurationTicks() {
+        return jackpotDurationTicks;
+    }
+
+    public void setJackpotDurationTicks(int jackpotDurationTicks) {
+        this.jackpotDurationTicks = jackpotDurationTicks;
+    }
+
+    public boolean isThor() {
+        return thor;
+    }
+
+    public void setThor(boolean thor) {
+        this.thor = thor;
+    }
+
+    public int getThorChancePercent() {
+        return thorChancePercent;
+    }
+
+    public void setThorChancePercent(int thorChancePercent) {
+        this.thorChancePercent = thorChancePercent;
+    }
+
+    public float getThorDamage() {
+        return thorDamage;
+    }
+
+    public void setThorDamage(float thorDamage) {
+        this.thorDamage = thorDamage;
+    }
+
+    public boolean isUnderSpeed() {
+        return underSpeed;
+    }
+
+    public void setUnderSpeed(boolean underSpeed) {
+        this.underSpeed = underSpeed;
+    }
+
+    public int getUnderSpeedDurationTicks() {
+        return underSpeedDurationTicks;
+    }
+
+    public void setUnderSpeedDurationTicks(int underSpeedDurationTicks) {
+        this.underSpeedDurationTicks = underSpeedDurationTicks;
+    }
+
+    public int getUnderSpeedAmplifier() {
+        return underSpeedAmplifier;
+    }
+
+    public void setUnderSpeedAmplifier(int underSpeedAmplifier) {
+        this.underSpeedAmplifier = underSpeedAmplifier;
+    }
+
+    public boolean isDep() {
+        return dep;
+    }
+
+    public void setDep(boolean dep) {
+        this.dep = dep;
+    }
+
+    public int getDepChancePercent() {
+        return depChancePercent;
+    }
+
+    public void setDepChancePercent(int depChancePercent) {
+        this.depChancePercent = depChancePercent;
+    }
+
+    public double getDepTargetBonusMultiplier() {
+        return depTargetBonusMultiplier;
+    }
+
+    public void setDepTargetBonusMultiplier(double depTargetBonusMultiplier) {
+        this.depTargetBonusMultiplier = depTargetBonusMultiplier;
+    }
+
+    public double getDepSelfBonusMultiplier() {
+        return depSelfBonusMultiplier;
+    }
+
+    public void setDepSelfBonusMultiplier(double depSelfBonusMultiplier) {
+        this.depSelfBonusMultiplier = depSelfBonusMultiplier;
+    }
+
+    public boolean isTimeJump() {
+        return timeJump;
+    }
+
+    public void setTimeJump(boolean timeJump) {
+        this.timeJump = timeJump;
+    }
+
+    public int getTimeJumpChancePercent() {
+        return timeJumpChancePercent;
+    }
+
+    public void setTimeJumpChancePercent(int timeJumpChancePercent) {
+        this.timeJumpChancePercent = timeJumpChancePercent;
+    }
+
+    public boolean isSummoner() {
+        return summoner;
+    }
+
+    public void setSummoner(boolean summoner) {
+        this.summoner = summoner;
+    }
+
+    public int getSummonerLimitPerPlayer() {
+        return summonerLimitPerPlayer;
+    }
+
+    public void setSummonerLimitPerPlayer(int summonerLimitPerPlayer) {
+        this.summonerLimitPerPlayer = summonerLimitPerPlayer;
+    }
+
+    public float getSummonerZombieDamage() {
+        return summonerZombieDamage;
+    }
+
+    public void setSummonerZombieDamage(float summonerZombieDamage) {
+        this.summonerZombieDamage = summonerZombieDamage;
+    }
+
+    public boolean isParasiteSummonerSynergy() {
+        return parasiteSummonerSynergy;
+    }
+
+    public void setParasiteSummonerSynergy(boolean parasiteSummonerSynergy) {
+        this.parasiteSummonerSynergy = parasiteSummonerSynergy;
+    }
+
+    public boolean isDepJackpotSynergy() {
+        return depJackpotSynergy;
+    }
+
+    public void setDepJackpotSynergy(boolean depJackpotSynergy) {
+        this.depJackpotSynergy = depJackpotSynergy;
+    }
+
+    public boolean isHealingFieldSurge() {
+        return healingFieldSurge;
+    }
+
+    public void setHealingFieldSurge(boolean healingFieldSurge) {
+        this.healingFieldSurge = healingFieldSurge;
+    }
+
+    public boolean isGhostRider() {
+        return ghostRider;
+    }
+
+    public void setGhostRider(boolean ghostRider) {
+        this.ghostRider = ghostRider;
+    }
+
+    public boolean isBombShield() {
+        return bombShield;
+    }
+
+    public void setBombShield(boolean bombShield) {
+        this.bombShield = bombShield;
+    }
+
+    public float getBombShieldDamage() {
+        return bombShieldDamage;
+    }
+
+    public void setBombShieldDamage(float bombShieldDamage) {
+        this.bombShieldDamage = bombShieldDamage;
+    }
+
+    public double getBombShieldRadius() {
+        return bombShieldRadius;
+    }
+
+    public void setBombShieldRadius(double bombShieldRadius) {
+        this.bombShieldRadius = bombShieldRadius;
+    }
+
+    public long getBombShieldExtraCooldownTicks() {
+        return bombShieldExtraCooldownTicks;
+    }
+
+    public void setBombShieldExtraCooldownTicks(long bombShieldExtraCooldownTicks) {
+        this.bombShieldExtraCooldownTicks = bombShieldExtraCooldownTicks;
+    }
+
+    public boolean isKaboom() {
+        return kaboom;
+    }
+
+    public void setKaboom(boolean kaboom) {
+        this.kaboom = kaboom;
+    }
+
+    public float getKaboomDamage() {
+        return kaboomDamage;
+    }
+
+    public void setKaboomDamage(float kaboomDamage) {
+        this.kaboomDamage = kaboomDamage;
+    }
+
+    public double getKaboomRadius() {
+        return kaboomRadius;
+    }
+
+    public void setKaboomRadius(double kaboomRadius) {
+        this.kaboomRadius = kaboomRadius;
     }
 }

@@ -1,8 +1,12 @@
 package com.rounds.zero.game;
 
 import com.rounds.zero.game.arena.Arena;
+import com.rounds.zero.game.event.RoundEventManager;
 import com.rounds.zero.game.combat.CombatManager;
+import com.rounds.zero.game.upgrade.UpgradeSynergyHelper;
 import com.rounds.zero.game.combat.CombatStats;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import com.rounds.zero.game.team.TeamId;
 import com.rounds.zero.game.team.TeamVisualManager;
 import com.rounds.zero.game.upgrade.PlayerUpgradeData;
@@ -41,6 +45,7 @@ public class GameManager {
     private final Random random = new Random();
     private final boolean debugMode = true;
     private final CombatManager combatManager = new CombatManager();
+    private final RoundEventManager roundEventManager = new RoundEventManager();
     private int roundsToWin = 5;
 
     private Arena currentArena;
@@ -60,6 +65,27 @@ public class GameManager {
         return combatManager;
     }
 
+    public RoundEventManager getRoundEventManager() {
+        return roundEventManager;
+    }
+
+    public boolean playerHasParasiteSummonerSynergy(ServerPlayerEntity player) {
+        return UpgradeSynergyHelper.hasAllCards(getOwnedUpgrades(player), "parasite", "summoner");
+    }
+
+    public void applyPersistentUpgradeEffects(ServerPlayerEntity player) {
+        if (UpgradeSynergyHelper.hasCard(getOwnedUpgrades(player), "ghost_rider")) {
+            player.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.FIRE_RESISTANCE,
+                    Integer.MAX_VALUE,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        }
+    }
+
     public boolean isPlayerShieldActive(ServerPlayerEntity player) {
         return combatManager.isShieldActive(player);
     }
@@ -74,8 +100,12 @@ public class GameManager {
     }
 
     public void tickCombat(MinecraftServer server) {
-        if (server.getOverworld().getTime() % 20L == 0L) {
+        long now = server.getOverworld().getTime();
+        if (now % 20L == 0L) {
             enforceGameModes(server);
+        }
+        if (gameState == GameState.ROUND_ACTIVE) {
+            roundEventManager.tick(server, this, now);
         }
         combatManager.tick(server);
     }
@@ -276,6 +306,7 @@ public class GameManager {
         if (gameState == GameState.ROUND_ACTIVE && hasTeam(player) && isAliveInRound(player)) {
             CombatStats resolvedStats = UpgradeEffectResolver.resolve(getOwnedUpgrades(player));
             combatManager.preparePlayerForNewRound(player, resolvedStats);
+            applyPersistentUpgradeEffects(player);
         }
 
         return true;
@@ -330,6 +361,8 @@ public class GameManager {
                         .append(Text.literal(selectedCard.getTitle()).formatted(Formatting.GOLD)),
                 false
         );
+
+        applyPersistentUpgradeEffects(player);
 
         advanceIfUpgradeSelectionDone(server);
 
@@ -530,6 +563,7 @@ public class GameManager {
         }
 
         setGameState(GameState.ROUND_END);
+        roundEventManager.onRoundEnd(server, this);
         combatManager.clearRoundProjectiles(server);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
@@ -749,6 +783,7 @@ public class GameManager {
         setCurrentArena(randomArena);
         setGameState(GameState.ROUND_ACTIVE);
         combatManager.clearRoundProjectiles(server);
+        roundEventManager.onRoundStart(server, this);
 
         alivePlayers.clear();
         playersWaitingForUpgradeChoice.clear();
@@ -773,6 +808,8 @@ public class GameManager {
             player.getHungerManager().setFoodLevel(20);
             player.getHungerManager().setSaturationLevel(20.0f);
             player.clearStatusEffects();
+            roundEventManager.applyEventEffects(player);
+            applyPersistentUpgradeEffects(player);
             player.setFireTicks(0);
             player.getInventory().clear();
             player.getInventory().insertStack(ModWeaponItems.createPistol());

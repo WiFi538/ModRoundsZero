@@ -6,6 +6,7 @@ import com.rounds.zero.game.arena.Arena;
 import com.rounds.zero.game.combat.CombatManager;
 import com.rounds.zero.game.rules.FriendlyFireHandler;
 import com.rounds.zero.game.rules.WorldInteractionHandler;
+import com.rounds.zero.item.ModItems;
 import com.rounds.zero.item.ModWeaponItems;
 import com.rounds.zero.network.ModPackets;
 import net.fabricmc.api.ModInitializer;
@@ -20,8 +21,13 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
+
+import java.util.UUID;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.ActionResult;
@@ -38,6 +44,7 @@ public class RoundsZero implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ModItems.register();
         ModPackets.registerC2SPackets();
         LOGGER.info("ROUNDS ZERO MOD LOADED!!!");
 
@@ -89,9 +96,86 @@ public class RoundsZero implements ModInitializer {
             }
         });
 
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            LivingEntity living = entity;
+            if (living.getServer() == null) {
+                return;
+            }
+
+            // cursed explosion on death (no block damage)
+            if (living.getCommandTags().contains("rounds_zero_cursed")) {
+                living.getWorld().createExplosion(
+                        living,
+                        living.getDamageSources().explosion(living, living),
+                        new net.minecraft.world.explosion.ExplosionBehavior() {
+                            @Override
+                            public boolean canDestroyBlock(net.minecraft.world.explosion.Explosion explosion,
+                                                           net.minecraft.world.BlockView world,
+                                                           net.minecraft.util.math.BlockPos pos,
+                                                           net.minecraft.block.BlockState state,
+                                                           float power) {
+                                return false;
+                            }
+                        },
+                        new net.minecraft.util.math.Vec3d(living.getX(), living.getY(), living.getZ()),
+                        2.8f,
+                        false,
+                        net.minecraft.world.World.ExplosionSourceType.MOB
+                );
+            }
+
+            // parasite spawns
+            if (damageSource.getSource() instanceof PersistentProjectileEntity projectile
+                    && projectile.getCommandTags().contains(CombatManager.ROUNDS_BULLET_TAG)
+                    && projectile.getOwner() instanceof ServerPlayerEntity shooter) {
+                var stats = GAME_MANAGER.getCombatManager().getStats(shooter);
+                if (stats.isParasite()) {
+                    if (living instanceof ServerPlayerEntity) {
+                        GAME_MANAGER.getCombatManager().spawnParasiteSilverfish(living, shooter);
+                        GAME_MANAGER.getCombatManager().spawnParasiteSilverfish(living, shooter);
+                    }
+                }
+            }
+
+            if (damageSource.getAttacker() != null && damageSource.getAttacker().getCommandTags().contains("rounds_zero_parasite_silverfish")) {
+                if (living instanceof ServerPlayerEntity) {
+                    ServerPlayerEntity parasiteOwner = resolveParasiteSilverfishOwner(damageSource.getAttacker());
+                    GAME_MANAGER.getCombatManager().spawnParasiteSilverfish(living, parasiteOwner);
+                }
+            }
+
+            if (living instanceof ZombieEntity zombie
+                    && zombie.getCommandTags().stream().anyMatch(tag -> tag.startsWith("rounds_zero_summoner_zombie:"))) {
+                GAME_MANAGER.getCombatManager().handleSummonerZombieDeath(zombie);
+            }
+
+            if (living instanceof ServerPlayerEntity victim
+                    && damageSource.getAttacker() instanceof ZombieEntity zombie) {
+                GAME_MANAGER.getCombatManager().handleSummonerZombieKilledPlayer(zombie, victim);
+            }
+        });
+
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayerEntity player)) {
                 return true;
+            }
+
+            // Summoner zombies must never damage their owner
+            if (source.getAttacker() != null && source.getAttacker().getCommandTags().contains("rounds_zero_summoner_zombie:" + player.getUuid())) {
+                return false;
+            }
+
+            if (source.getAttacker() != null
+                    && source.getAttacker().getCommandTags().contains("rounds_zero_parasite_silverfish")
+                    && GAME_MANAGER.playerHasParasiteSummonerSynergy(player)) {
+                return false;
+            }
+
+            // Owner should not be able to damage their summoner zombies (prevents aggro).
+            if (entity instanceof ZombieEntity zombie && source.getAttacker() instanceof ServerPlayerEntity attacker) {
+                if (zombie.getCommandTags().contains("rounds_zero_summoner_zombie:" + attacker.getUuid())) {
+                    return false;
+                }
             }
 
             // 1) Полностью убираем урон от падения для игроков режима
@@ -187,8 +271,31 @@ public class RoundsZero implements ModInitializer {
     }
 
     private static void markProjectileAsShieldBlocked(DamageSource source) {
-        if (source.getSource() instanceof PersistentProjectileEntity projectile) {
+        Entity projectile = source.getSource();
+        if (projectile != null) {
             projectile.addCommandTag(CombatManager.SHIELD_BLOCKED_TAG);
         }
+    }
+
+    private static ServerPlayerEntity resolveParasiteSilverfishOwner(Entity silverfish) {
+        if (silverfish.getServer() == null) {
+            return null;
+        }
+
+        String prefix = "rounds_zero_parasite_silverfish:";
+        for (String tag : silverfish.getCommandTags()) {
+            if (!tag.startsWith(prefix)) {
+                continue;
+            }
+
+            try {
+                UUID ownerId = UUID.fromString(tag.substring(prefix.length()));
+                return silverfish.getServer().getPlayerManager().getPlayer(ownerId);
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        return null;
     }
 }

@@ -9,6 +9,62 @@ public final class UpgradeRegistry {
 
     static {
         register(UpgradeCard.builder(
+                "cursed_bullet",
+                "ПРОКЛЯТАЯ ПУЛЯ",
+                "Попадание заставляет цель светиться. При смерти цель взрывается (блоки не ломаются)."
+        ).texturePath("rounds_zero:textures/gui/cards/poison_bullet.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "parasite",
+                "ПАРАЗИТ",
+                "Убийство пулей: из цели появляются 2 чешуйницы. Убийство чешуйницей: появляется ещё 1."
+        ).texturePath("rounds_zero:textures/gui/cards/poison_cloud.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "jackpot",
+                "ДЖЕКПОТ",
+                "50% шанс: при попадании случайный эффект на 2 секунды — либо тебе, либо цели."
+        ).texturePath("rounds_zero:textures/gui/cards/blindness_bullets.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "thor",
+                "ТОР",
+                "15% шанс вызвать молнию при попадании (без огня и без ломания блоков)."
+        ).texturePath("rounds_zero:textures/gui/cards/ice_bullets.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "under_speed",
+                "ПОД СПИДАМИ",
+                "При попадании во врага ты получаешь Скорость II на 2 секунды."
+        ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "dep",
+                "ДЕП",
+                "50% шанс: +50% урона по цели ИЛИ +20% урона по тебе (с учётом модификаторов)."
+        ).texturePath("rounds_zero:textures/gui/cards/glass_cannon.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "time_jump",
+                "ВРЕМЕННОЙ СКАЧОК",
+                "15% шанс: цель телепортируется на 2 блока в случайную сторону (вбок или вверх)."
+        ).texturePath("rounds_zero:textures/gui/cards/tochniy_vystrel.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "summoner",
+                "ПРИЗЫВАТЕЛЬ",
+                "При использовании щита призывает зомби. Он не горит и не атакует призывателя. Лимит: 6 на игрока."
+        ).texturePath("rounds_zero:textures/gui/cards/healing_field.png")
+                .build());
+
+        register(UpgradeCard.builder(
                 "triple_shot",
                 "ТРОЙНОЙ ВЫСТРЕЛ",
                 "Стреляет 3 пулями за 1 патрон (три рядом). -25% урон, +11% скорость пуль, -11% скорость стрельбы, +1с перезарядка"
@@ -187,6 +243,29 @@ public final class UpgradeRegistry {
                 "ОСЛЕПЛЕНИЕ",
                 "30% шанс ослепить цель на 2 секунды."
         ).texturePath("rounds_zero:textures/gui/cards/blindness_bullets.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "ghost_rider",
+                "ПРИЗРАЧНЫЙ ГОНЩИК",
+                "За тобой остаётся огненный след: блоки под ногами поджигаются."
+        ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "bomb_shield",
+                "БОМБИЧЕСКИЙ НАСТРОЙ",
+                "При активации щита — взрыв радиусом 3 блока на 5 сердец. Союзников не задевает. Кулдаун щита +5 сек."
+        ).texturePath("rounds_zero:textures/gui/cards/healing_field.png")
+                .build());
+
+        register(UpgradeCard.builder(
+                "kaboom",
+                "БАБАХ",
+                "Пуля взрывается при попадании (3 блока, 2 сердца). Бьёт всех, включая тебя и союзников. -10% скорость стрельбы, -10% скорость пуль."
+        ).texturePath("rounds_zero:textures/gui/cards/big_bullet.png")
+                .fireRatePercent(-10.0)
+                .bulletSpeedMultiplier(0.9)
                 .build());
     }
 

@@ -15,6 +15,8 @@ public class PlayerCombatData {
     private long shieldCooldownEndTick = 0L;
     private long healingFieldCooldownEndTick = 0L;
 
+    private boolean healingSurgeActive = false;
+
     public CombatStats getStats() {
         return stats;
     }
@@ -88,5 +90,13 @@ public class PlayerCombatData {
 
     public void setHealingFieldCooldownEndTick(long healingFieldCooldownEndTick) {
         this.healingFieldCooldownEndTick = healingFieldCooldownEndTick;
+    }
+
+    public boolean isHealingSurgeActive() {
+        return healingSurgeActive;
+    }
+
+    public void setHealingSurgeActive(boolean healingSurgeActive) {
+        this.healingSurgeActive = healingSurgeActive;
     }
 }

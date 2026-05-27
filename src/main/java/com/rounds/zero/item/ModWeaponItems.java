@@ -1,7 +1,6 @@
 package com.rounds.zero.item;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -13,7 +12,7 @@ public final class ModWeaponItems {
     }
 
     public static ItemStack createPistol() {
-        ItemStack stack = new ItemStack(Items.IRON_HORSE_ARMOR);
+        ItemStack stack = new ItemStack(ModItems.PISTOL);
         stack.setCustomName(Text.literal("Пистолет").formatted(Formatting.GOLD));
 
         NbtCompound nbt = stack.getOrCreateNbt();
@@ -28,7 +27,7 @@ public final class ModWeaponItems {
             return false;
         }
 
-        if (!stack.isOf(Items.IRON_HORSE_ARMOR)) {
+        if (!stack.isOf(ModItems.PISTOL)) {
             return false;
         }
 

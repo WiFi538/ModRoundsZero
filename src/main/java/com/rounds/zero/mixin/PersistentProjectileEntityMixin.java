@@ -3,6 +3,7 @@ package com.rounds.zero.mixin;
 import com.rounds.zero.RoundsZero;
 import com.rounds.zero.game.combat.CombatManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
@@ -30,8 +31,8 @@ public class PersistentProjectileEntityMixin {
             return;
         }
 
-        if (entityHitResult.getEntity() instanceof ServerPlayerEntity target) {
-            RoundsZero.GAME_MANAGER.getCombatManager().handleProjectileHitEntity(projectile, shooter, target);
+        if (entityHitResult.getEntity() instanceof LivingEntity target) {
+            RoundsZero.GAME_MANAGER.getCombatManager().handleProjectileHitEntity(projectile, shooter, target, (float) projectile.getDamage());
         }
 
         projectile.discard();
