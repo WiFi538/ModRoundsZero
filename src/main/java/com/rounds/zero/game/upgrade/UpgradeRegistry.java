@@ -13,6 +13,9 @@ public final class UpgradeRegistry {
                 "ПРОКЛЯТАЯ ПУЛЯ",
                 "Попадание заставляет цель светиться. При смерти цель взрывается (блоки не ломаются)."
         ).texturePath("rounds_zero:textures/gui/cards/poison_bullet.png")
+                .bulletSpeedMultiplier(1.1)
+                .flatAmmoBonus(2)
+                .reloadTicksFlat(40L)
                 .build());
 
         register(UpgradeCard.builder(
@@ -20,6 +23,10 @@ public final class UpgradeRegistry {
                 "ПАРАЗИТ",
                 "Убийство пулей: из цели появляются 2 чешуйницы. Убийство чешуйницей: появляется ещё 1."
         ).texturePath("rounds_zero:textures/gui/cards/poison_cloud.png")
+                .damageMultiplier(1.2)
+                .fireRatePercent(-10.0)
+                .flatAmmoBonus(1)
+                .maxHealthMultiplier(1.3)
                 .build());
 
         register(UpgradeCard.builder(
@@ -27,6 +34,11 @@ public final class UpgradeRegistry {
                 "ДЖЕКПОТ",
                 "50% шанс: при попадании случайный эффект на 2 секунды — либо тебе, либо цели."
         ).texturePath("rounds_zero:textures/gui/cards/blindness_bullets.png")
+                .flatAmmoBonus(5)
+                .fireRatePercent(20.0)
+                .bulletSpeedMultiplier(0.9)
+                .damageMultiplier(1.1)
+                .reloadTicksFlat(20L)
                 .build());
 
         register(UpgradeCard.builder(
@@ -34,6 +46,10 @@ public final class UpgradeRegistry {
                 "ТОР",
                 "15% шанс вызвать молнию при попадании (без огня и без ломания блоков)."
         ).texturePath("rounds_zero:textures/gui/cards/ice_bullets.png")
+                .maxHealthMultiplier(1.2)
+                .flatAmmoBonus(1)
+                .fireRatePercent(-10.0)
+                .shieldCooldownTicksFlat(-20)
                 .build());
 
         register(UpgradeCard.builder(
@@ -41,6 +57,10 @@ public final class UpgradeRegistry {
                 "ПОД СПИДАМИ",
                 "При попадании во врага ты получаешь Скорость II на 2 секунды."
         ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
+                .bulletSpeedMultiplier(1.2)
+                .fireRatePercent(10.0)
+                .maxHealthMultiplier(0.8)
+                .reloadTicksFlat(20L)
                 .build());
 
         register(UpgradeCard.builder(
@@ -48,6 +68,10 @@ public final class UpgradeRegistry {
                 "ДЕП",
                 "50% шанс: +50% урона по цели ИЛИ +20% урона по тебе (с учётом модификаторов)."
         ).texturePath("rounds_zero:textures/gui/cards/glass_cannon.png")
+                .maxHealthMultiplier(0.9)
+                .fireRatePercent(20.0)
+                .bulletSpeedMultiplier(1.1)
+                .flatAmmoBonus(3)
                 .build());
 
         register(UpgradeCard.builder(
@@ -55,6 +79,10 @@ public final class UpgradeRegistry {
                 "ВРЕМЕННОЙ СКАЧОК",
                 "15% шанс: цель телепортируется на 2 блока в случайную сторону (вбок или вверх)."
         ).texturePath("rounds_zero:textures/gui/cards/tochniy_vystrel.png")
+                .bulletSpeedMultiplier(1.1)
+                .fireRatePercent(-10.0)
+                .flatAmmoBonus(1)
+                .reloadTicksFlat(20L)
                 .build());
 
         register(UpgradeCard.builder(
@@ -62,41 +90,50 @@ public final class UpgradeRegistry {
                 "ПРИЗЫВАТЕЛЬ",
                 "При использовании щита призывает зомби. Он не горит и не атакует призывателя. Лимит: 6 на игрока."
         ).texturePath("rounds_zero:textures/gui/cards/healing_field.png")
+                .shieldCooldownTicksFlat(40)
+                .maxHealthMultiplier(0.9)
                 .build());
 
         register(UpgradeCard.builder(
                 "triple_shot",
                 "ТРОЙНОЙ ВЫСТРЕЛ",
-                "Стреляет 3 пулями за 1 патрон (три рядом). -25% урон, +11% скорость пуль, -11% скорость стрельбы, +1с перезарядка"
+                "Стреляет 3 пулями за 1 патрон (три рядом). +5% скорость пули, -5% скорости стрельбы, -1 пуля, +2с перезарядка, +5% здоровья."
         ).texturePath("rounds_zero:textures/gui/cards/big_bullet.png")
-                .damageMultiplier(0.75)
-                .bulletSpeedMultiplier(1.11)
-                .fireRatePercent(-11.0)
-                .reloadTicksFlat(20L)
+                .bulletSpeedMultiplier(1.05)
+                .fireRatePercent(-5.0)
+                .flatAmmoBonus(-1)
+                .reloadTicksFlat(40L)
+                .maxHealthMultiplier(1.05)
                 .build());
 
         register(UpgradeCard.builder(
                 "sniper",
                 "СНАЙПЕР",
-                "Урон +150%, скорость пуль +500%, скорость стрельбы в 2 раза ниже, здоровье -30%. +2.5с перезарядка. В магазине 1 патрон."
+                "Полная замена: -5 пуль (минимум 1), +100% урон, +100% скорость пули, -50% скорости стрельбы, +2с перезарядка, -30% здоровья, -2с перезарядка щита."
         ).texturePath("rounds_zero:textures/gui/cards/tochniy_vystrel.png")
-                .damageMultiplier(2.5)
-                .bulletSpeedMultiplier(6.0)
-                .fireRatePercent(-100.0)
+                .damageMultiplier(2.0)
+                .bulletSpeedMultiplier(2.0)
+                .fireRatePercent(-50.0)
                 .maxHealthMultiplier(0.7)
-                .reloadTicksFlat(50L)
+                .reloadTicksFlat(40L)
+                .shieldCooldownTicksFlat(-40)
                 .build());
 
         register(UpgradeCard.builder(
                 "fire_shot",
                 "ОГНЕННЫЙ ВЫСТРЕЛ",
-                "При попадании цель поджигается на 3 секунды."
+                "При попадании цель сильно загорается и получает дополнительный огненный урон."
         ).texturePath("rounds_zero:textures/gui/cards/glass_cannon.png")
+                .reloadTicksFlat(20L)
+                .bulletSpeedMultiplier(1.1)
+                .fireRatePercent(-10.0)
+                .maxHealthMultiplier(1.2)
+                .shieldCooldownTicksFlat(20)
                 .build());
 
         register(UpgradeCard.builder(
                 "ahui_plan",
-                "АХУЕННЫЙ ПЛАН",
+                "НАДЕЖНЫЙ ПЛАН",
                 "Урон +100%. Скорость стрельбы в 2 раза ниже. Перезарядка +0.5с."
         ).texturePath("rounds_zero:textures/gui/cards/ahui_plan.png")
                 .damageMultiplier(2.0)
@@ -121,6 +158,8 @@ public final class UpgradeRegistry {
         ).texturePath("rounds_zero:textures/gui/cards/bogatyr.png")
                 .shieldCooldownPercent(-25.0)
                 .maxHealthMultiplier(1.5)
+                .fireRatePercent(-5.0)
+                .damageMultiplier(1.05)
                 .build());
 
         register(UpgradeCard.builder(
@@ -129,8 +168,10 @@ public final class UpgradeRegistry {
                 "Скорость пуль +175%. Скорость стрельбы -30%. Перезарядка +2с."
         ).texturePath("rounds_zero:textures/gui/cards/skorostrel.png")
                 .bulletSpeedMultiplier(2.75)
-                .fireRatePercent(-30.0)
+                .fireRatePercent(30.0)
+                .maxHealthMultiplier(0.8)
                 .reloadTicksFlat(40L)
+                .shieldCooldownTicksFlat(20)
                 .build());
 
         register(UpgradeCard.builder(
@@ -159,6 +200,7 @@ public final class UpgradeRegistry {
                 "Перезарядка -50%."
         ).texturePath("rounds_zero:textures/gui/cards/fast_gonzales.png")
                 .reloadPercent(-50.0)
+                .shieldCooldownPercent(-10.0)
                 .build());
 
         register(UpgradeCard.builder(
@@ -181,16 +223,6 @@ public final class UpgradeRegistry {
                 .damageMultiplier(1.2)
                 .fireRatePercent(-25.0)
                 .reloadTicksFlat(10L)
-                .build());
-
-        register(UpgradeCard.builder(
-                "raskrutka",
-                "РАСКРУТКА",
-                "Скорость пуль +60%. Скорость стрельбы +50%. Перезарядка +1с."
-        ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
-                .bulletSpeedMultiplier(1.6)
-                .fireRatePercent(50.0)
-                .reloadTicksFlat(20L)
                 .build());
 
         register(UpgradeCard.builder(
@@ -243,13 +275,7 @@ public final class UpgradeRegistry {
                 "ОСЛЕПЛЕНИЕ",
                 "30% шанс ослепить цель на 2 секунды."
         ).texturePath("rounds_zero:textures/gui/cards/blindness_bullets.png")
-                .build());
-
-        register(UpgradeCard.builder(
-                "ghost_rider",
-                "ПРИЗРАЧНЫЙ ГОНЩИК",
-                "За тобой остаётся огненный след: блоки под ногами поджигаются."
-        ).texturePath("rounds_zero:textures/gui/cards/raskrutka.png")
+                .fireRatePercent(10.0)
                 .build());
 
         register(UpgradeCard.builder(
@@ -257,6 +283,7 @@ public final class UpgradeRegistry {
                 "БОМБИЧЕСКИЙ НАСТРОЙ",
                 "При активации щита — взрыв радиусом 3 блока на 5 сердец. Союзников не задевает. Кулдаун щита +5 сек."
         ).texturePath("rounds_zero:textures/gui/cards/healing_field.png")
+                .maxHealthMultiplier(1.2)
                 .build());
 
         register(UpgradeCard.builder(
@@ -266,6 +293,10 @@ public final class UpgradeRegistry {
         ).texturePath("rounds_zero:textures/gui/cards/big_bullet.png")
                 .fireRatePercent(-10.0)
                 .bulletSpeedMultiplier(0.9)
+                .damageMultiplier(1.1)
+                .maxHealthMultiplier(0.9)
+                .reloadTicksFlat(20L)
+                .shieldCooldownTicksFlat(20)
                 .build());
     }
 

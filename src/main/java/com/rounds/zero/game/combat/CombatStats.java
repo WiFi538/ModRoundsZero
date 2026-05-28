@@ -10,7 +10,7 @@ public class CombatStats {
     private double bulletSpeed = 1.65;
     private double bulletSize = 1.0;
 
-    private long shieldDurationTicks = 140L;
+    private long shieldDurationTicks = 40L;
     private long shieldCooldownTicks = 100L;
 
     private double maxHealth = 20.0;
@@ -35,6 +35,7 @@ public class CombatStats {
 
     private int projectilesPerShot = 1;
     private int fireOnHitDurationTicks = 0;
+    private float fireOnHitExtraDamage = 0.0f;
 
     private boolean cursedBullet = false;
     private int cursedGlowDurationTicks = 0;
@@ -80,6 +81,7 @@ public class CombatStats {
     private boolean kaboom = false;
     private float kaboomDamage = 4.0f;
     private double kaboomRadius = 1.5;
+    private boolean fireGhostSynergy = false;
 
     public static CombatStats createDefault() {
         return new CombatStats();
@@ -112,6 +114,7 @@ public class CombatStats {
         copy.healingFieldCooldownTicks = this.healingFieldCooldownTicks;
         copy.projectilesPerShot = this.projectilesPerShot;
         copy.fireOnHitDurationTicks = this.fireOnHitDurationTicks;
+        copy.fireOnHitExtraDamage = this.fireOnHitExtraDamage;
         copy.cursedBullet = this.cursedBullet;
         copy.cursedGlowDurationTicks = this.cursedGlowDurationTicks;
         copy.cursedExplosionPower = this.cursedExplosionPower;
@@ -145,6 +148,7 @@ public class CombatStats {
         copy.kaboom = this.kaboom;
         copy.kaboomDamage = this.kaboomDamage;
         copy.kaboomRadius = this.kaboomRadius;
+        copy.fireGhostSynergy = this.fireGhostSynergy;
         return copy;
     }
 
@@ -346,6 +350,14 @@ public class CombatStats {
 
     public void setFireOnHitDurationTicks(int fireOnHitDurationTicks) {
         this.fireOnHitDurationTicks = fireOnHitDurationTicks;
+    }
+
+    public float getFireOnHitExtraDamage() {
+        return fireOnHitExtraDamage;
+    }
+
+    public void setFireOnHitExtraDamage(float fireOnHitExtraDamage) {
+        this.fireOnHitExtraDamage = fireOnHitExtraDamage;
     }
 
     public boolean isCursedBullet() {
@@ -610,5 +622,13 @@ public class CombatStats {
 
     public void setKaboomRadius(double kaboomRadius) {
         this.kaboomRadius = kaboomRadius;
+    }
+
+    public boolean isFireGhostSynergy() {
+        return fireGhostSynergy;
+    }
+
+    public void setFireGhostSynergy(boolean fireGhostSynergy) {
+        this.fireGhostSynergy = fireGhostSynergy;
     }
 }

@@ -5,8 +5,6 @@ import com.rounds.zero.game.event.RoundEventManager;
 import com.rounds.zero.game.combat.CombatManager;
 import com.rounds.zero.game.upgrade.UpgradeSynergyHelper;
 import com.rounds.zero.game.combat.CombatStats;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
 import com.rounds.zero.game.team.TeamId;
 import com.rounds.zero.game.team.TeamVisualManager;
 import com.rounds.zero.game.upgrade.PlayerUpgradeData;
@@ -74,16 +72,6 @@ public class GameManager {
     }
 
     public void applyPersistentUpgradeEffects(ServerPlayerEntity player) {
-        if (UpgradeSynergyHelper.hasCard(getOwnedUpgrades(player), "ghost_rider")) {
-            player.addStatusEffect(new StatusEffectInstance(
-                    StatusEffects.FIRE_RESISTANCE,
-                    Integer.MAX_VALUE,
-                    0,
-                    false,
-                    false,
-                    true
-            ));
-        }
     }
 
     public boolean isPlayerShieldActive(ServerPlayerEntity player) {
@@ -114,8 +102,17 @@ public class GameManager {
         return hasTeam(player);
     }
 
+    private boolean shouldAutoManageGameMode(ServerPlayerEntity player) {
+        // OP players can manually control their game mode.
+        return !player.hasPermissionLevel(2);
+    }
+
     private void enforceGameModes(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (!shouldAutoManageGameMode(player)) {
+                continue;
+            }
+
             if (!hasTeam(player)) {
                 if (gameState == GameState.WAITING && player.interactionManager.getGameMode() != GameMode.ADVENTURE) {
                     player.changeGameMode(GameMode.ADVENTURE);
@@ -414,7 +411,9 @@ public class GameManager {
     public void sendPlayerToLobby(MinecraftServer server, ServerPlayerEntity player) {
         combatManager.resetPlayerToDefault(player);
 
-        player.changeGameMode(GameMode.ADVENTURE);
+        if (shouldAutoManageGameMode(player)) {
+            player.changeGameMode(GameMode.ADVENTURE);
+        }
         player.getInventory().clear();
         player.setHealth(player.getMaxHealth());
         player.getHungerManager().setFoodLevel(20);
@@ -475,7 +474,9 @@ public class GameManager {
             return;
         }
 
-        player.changeGameMode(GameMode.SPECTATOR);
+        if (shouldAutoManageGameMode(player)) {
+            player.changeGameMode(GameMode.SPECTATOR);
+        }
 
         if (currentArena != null) {
             BlockPos targetPos = getSpawnForTeam(currentArena, teamId);
@@ -612,7 +613,9 @@ public class GameManager {
                 playersWaitingForUpgradeChoice.add(player.getUuid());
                 List<UpgradeCard> offer = generateUpgradeOffer(5);
                 currentUpgradeOffers.put(player.getUuid(), offer);
-                player.changeGameMode(GameMode.SPECTATOR);
+                if (shouldAutoManageGameMode(player)) {
+                    player.changeGameMode(GameMode.SPECTATOR);
+                }
                 ModPackets.sendUpgradeScreen(player, offer);
             }
         }
@@ -803,7 +806,9 @@ public class GameManager {
             CombatStats resolvedStats = UpgradeEffectResolver.resolve(getOwnedUpgrades(player));
             combatManager.preparePlayerForNewRound(player, resolvedStats);
 
-            player.changeGameMode(GameMode.ADVENTURE);
+            if (shouldAutoManageGameMode(player)) {
+                player.changeGameMode(GameMode.ADVENTURE);
+            }
             player.setHealth(player.getMaxHealth());
             player.getHungerManager().setFoodLevel(20);
             player.getHungerManager().setSaturationLevel(20.0f);

@@ -36,7 +36,11 @@ public final class UpgradeEffectResolver {
                 case "poison_cloud" -> poisonCloudCount++;
                 case "blindness_bullets" -> blindnessCount++;
                 case "triple_shot" -> stats.setProjectilesPerShot(Math.max(stats.getProjectilesPerShot(), 3));
-                case "fire_shot" -> stats.setFireOnHitDurationTicks(Math.max(stats.getFireOnHitDurationTicks(), 60));
+                case "fire_shot" -> {
+                    stats.setFireOnHitDurationTicks(Math.max(stats.getFireOnHitDurationTicks(), 100));
+                    // Extra fire-hit damage so fire shot consistently feels stronger than vanilla burn ticks.
+                    stats.setFireOnHitExtraDamage(Math.max(stats.getFireOnHitExtraDamage(), 4.0f));
+                }
                 case "sniper" -> hasSniper = true;
                 case "cursed_bullet" -> {
                     stats.setCursedBullet(true);
@@ -74,7 +78,6 @@ public final class UpgradeEffectResolver {
                     stats.setSummonerLimitPerPlayer(Math.max(stats.getSummonerLimitPerPlayer(), 6));
                     stats.setSummonerZombieDamage(Math.max(stats.getSummonerZombieDamage(), 6.0f));
                 }
-                case "ghost_rider" -> stats.setGhostRider(true);
                 case "bomb_shield" -> {
                     stats.setBombShield(true);
                     stats.setBombShieldDamage(Math.max(stats.getBombShieldDamage(), 10.0f));
@@ -92,7 +95,11 @@ public final class UpgradeEffectResolver {
         }
 
         if (hasSniper) {
-            stats.setMaxAmmo(1);
+            if (stats.getMaxAmmo() <= 5) {
+                stats.setMaxAmmo(1);
+            } else {
+                stats.setMaxAmmo(stats.getMaxAmmo() - 5);
+            }
         }
 
         if (iceBulletsCount > 0) {
@@ -159,6 +166,10 @@ public final class UpgradeEffectResolver {
             }
             stats.setHealingFieldSurge(true);
         }
+
+        if (UpgradeSynergyHelper.hasAllCards(cards, "fire_shot", "thor")) {
+            stats.setFireGhostSynergy(true);
+        }
     }
 
     private static void applyNumericPart(CombatStats stats, UpgradeCard card) {
@@ -213,6 +224,7 @@ public final class UpgradeEffectResolver {
         stats.setCursedGlowDurationTicks(Math.max(0, stats.getCursedGlowDurationTicks()));
         stats.setThorDamage(Math.max(0.0f, stats.getThorDamage()));
         stats.setCursedExplosionPower(Math.max(0.0f, stats.getCursedExplosionPower()));
+        stats.setFireOnHitExtraDamage(Math.max(0.0f, stats.getFireOnHitExtraDamage()));
         stats.setSummonerLimitPerPlayer(Math.max(0, stats.getSummonerLimitPerPlayer()));
         stats.setSummonerZombieDamage(Math.max(0.0f, stats.getSummonerZombieDamage()));
         stats.setBombShieldDamage(Math.max(0.0f, stats.getBombShieldDamage()));

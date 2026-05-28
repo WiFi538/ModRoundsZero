@@ -18,6 +18,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -45,6 +46,7 @@ public class CombatManager {
     private static final Vector3f BLUE_TEAM_COLOR = new Vector3f(0.20f, 0.45f, 0.95f);
     private static final Vector3f GREEN_TEAM_COLOR = new Vector3f(0.20f, 0.85f, 0.30f);
     private static final Vector3f YELLOW_TEAM_COLOR = new Vector3f(0.95f, 0.90f, 0.20f);
+    private static final Vector3f SHIELD_AURA_COLOR = new Vector3f(0.25f, 0.85f, 1.0f);
 
     private final Map<UUID, PlayerCombatData> playerCombatData = new HashMap<>();
     private final List<ActiveField> activeFields = new ArrayList<>();
@@ -288,7 +290,7 @@ public class CombatManager {
         }
 
         if (data.getCurrentAmmo() <= 0) {
-            player.sendMessage(Text.literal("Магазин пуст. Нажми R для перезарядки.").formatted(Formatting.RED), true);
+            triggerAutoReload(player, data, now);
             return;
         }
 
@@ -300,8 +302,17 @@ public class CombatManager {
         sendCombatStatus(player, data, now);
 
         if (data.getCurrentAmmo() == 0) {
-            player.sendMessage(Text.literal("Патроны закончились. Нажми R.").formatted(Formatting.GOLD), true);
+            triggerAutoReload(player, data, now);
         }
+    }
+
+    private void triggerAutoReload(ServerPlayerEntity player, PlayerCombatData data, long now) {
+        if (data.isReloading()) {
+            return;
+        }
+        data.setReloading(true);
+        data.setReloadEndTick(now + data.getStats().getReloadDurationTicks());
+        player.sendMessage(Text.literal("Патроны закончились. Автоперезарядка...").formatted(Formatting.GOLD), true);
     }
 
     private static final double TRIPLE_SHOT_SPACING = 0.35;
@@ -427,6 +438,12 @@ public class CombatManager {
 
             if (stats.getFireOnHitDurationTicks() > 0) {
                 target.setFireTicks(Math.max(target.getFireTicks(), stats.getFireOnHitDurationTicks()));
+                if (stats.getFireOnHitExtraDamage() > 0.0f) {
+                    target.damage(shooter.getDamageSources().inFire(), stats.getFireOnHitExtraDamage());
+                }
+                if (stats.isFireGhostSynergy() && shooter.getWorld() instanceof ServerWorld world) {
+                    igniteArea3x3(world, BlockPos.ofFloored(target.getPos()));
+                }
             }
 
             if (stats.isUnderSpeed() && isEnemyHit(shooter, target)) {
@@ -636,11 +653,17 @@ public class CombatManager {
         }
 
         if (stats.getPoisonCloudLifetimeTicks() <= 0) {
+            if (stats.getFireOnHitDurationTicks() > 0 && stats.isFireGhostSynergy()) {
+                igniteArea3x3(shooter.getServerWorld(), blockPos);
+            }
             return;
         }
 
         Vec3d center = Vec3d.ofCenter(blockPos);
         spawnPoisonField(shooter, shooter.getServerWorld(), center, stats, shooter.getServerWorld().getTime());
+        if (stats.getFireOnHitDurationTicks() > 0 && stats.isFireGhostSynergy()) {
+            igniteArea3x3(shooter.getServerWorld(), blockPos);
+        }
     }
 
     private void spawnHealingField(ServerPlayerEntity caster, CombatStats stats, long now) {
@@ -686,11 +709,6 @@ public class CombatManager {
                 continue;
             }
 
-            // Ghost rider trail: set fire under player's feet.
-            if (data.getStats().isGhostRider() && RoundsZero.GAME_MANAGER.isAliveInRound(player)) {
-                tryPlaceFireUnderPlayer(player);
-            }
-
             if (data.isShieldActive() && now >= data.getShieldEndTick()) {
                 data.setShieldActive(false);
                 data.setShieldEndTick(0L);
@@ -708,6 +726,10 @@ public class CombatManager {
                 );
             }
 
+            if (data.isShieldActive()) {
+                spawnShieldAura(player);
+            }
+
             sendCombatStatus(player, data, now);
         }
 
@@ -715,29 +737,42 @@ public class CombatManager {
         tickFields(server, now);
     }
 
-    private void tryPlaceFireUnderPlayer(ServerPlayerEntity player) {
-        ServerWorld world = player.getServerWorld();
-        if (world == null) {
-            return;
-        }
-
-        // Respect server rule: if fire tick is disabled, don't place fire.
+    private void igniteArea3x3(ServerWorld world, BlockPos center) {
         if (!world.getGameRules().getBoolean(GameRules.DO_FIRE_TICK)) {
             return;
         }
 
-        BlockPos pos = player.getBlockPos().down();
-        BlockPos firePos = pos.up();
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                BlockPos basePos = center.add(dx, 0, dz);
+                BlockPos firePos = basePos.up();
 
-        if (!world.getBlockState(firePos).isAir()) {
+                if (!world.getBlockState(firePos).isAir()) {
+                    continue;
+                }
+
+                if (net.minecraft.block.FireBlock.canPlaceAt(world, firePos, net.minecraft.util.math.Direction.UP)) {
+                    world.setBlockState(firePos, net.minecraft.block.Blocks.FIRE.getDefaultState(), 3);
+                }
+            }
+        }
+    }
+
+    private void spawnShieldAura(ServerPlayerEntity player) {
+        if (!(player.getWorld() instanceof ServerWorld world)) {
             return;
         }
 
-        if (!net.minecraft.block.FireBlock.canPlaceAt(world, firePos, player.getHorizontalFacing())) {
-            return;
+        DustParticleEffect auraParticle = new DustParticleEffect(SHIELD_AURA_COLOR, 1.2f);
+        double centerY = player.getY() + 1.0;
+        double radius = 0.75;
+        for (int i = 0; i < 12; i++) {
+            double angle = (Math.PI * 2.0 * i) / 12.0;
+            double x = player.getX() + Math.cos(angle) * radius;
+            double z = player.getZ() + Math.sin(angle) * radius;
+            world.spawnParticles(auraParticle, x, centerY, z, 1, 0.02, 0.1, 0.02, 0.0);
         }
-
-        world.setBlockState(firePos, net.minecraft.block.Blocks.FIRE.getDefaultState(), 3);
+        world.spawnParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.1, player.getZ(), 3, 0.25, 0.35, 0.25, 0.01);
     }
 
     private void tickSummonerZombies(MinecraftServer server) {

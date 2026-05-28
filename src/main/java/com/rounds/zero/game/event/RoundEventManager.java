@@ -153,7 +153,7 @@ public final class RoundEventManager {
         lightning.refreshPositionAfterTeleport(target.getX(), target.getY(), target.getZ());
         world.spawnEntity(lightning);
 
-        target.damage(target.getDamageSources().magic(), 6.0f);
+        target.damage(target.getDamageSources().magic(), 4.0f);
         lastOlympusStrikeTick = now;
     }
 
