@@ -53,7 +53,7 @@ public class CombatManager {
     private final Map<UUID, Set<UUID>> summonerZombiesByOwner = new HashMap<>();
     private final Random random = new Random();
 
-    private static final String CURSED_TAG = "rounds_zero_cursed";
+    public static final String CURSED_TAG = "rounds_zero_cursed";
     private static final String PARASITE_SILVERFISH_TAG = "rounds_zero_parasite_silverfish";
     private static final String SUMMONER_ZOMBIE_TAG = "rounds_zero_summoner_zombie";
     private static final String KABOOM_TAG = "rounds_zero_kaboom";
@@ -133,6 +133,10 @@ public class CombatManager {
     }
 
     public void clearRoundProjectiles(MinecraftServer server) {
+        clearRoundEntities(server);
+    }
+
+    public void clearRoundEntities(MinecraftServer server) {
         activeFields.clear();
         summonerZombiesByOwner.clear();
 
@@ -140,13 +144,27 @@ public class CombatManager {
             List<Entity> toRemove = new ArrayList<>();
 
             for (Entity entity : world.iterateEntities()) {
-                if (entity.getCommandTags().contains(ROUNDS_BULLET_TAG)) {
+                if (!(entity instanceof ServerPlayerEntity)) {
                     toRemove.add(entity);
                 }
             }
 
             for (Entity entity : toRemove) {
                 entity.discard();
+            }
+        }
+    }
+
+    public static void clearCursedState(LivingEntity entity) {
+        entity.getCommandTags().remove(CURSED_TAG);
+    }
+
+    public void clearAllCursedEntities(MinecraftServer server) {
+        for (ServerWorld world : server.getWorlds()) {
+            for (Entity entity : world.iterateEntities()) {
+                if (entity instanceof LivingEntity living && living.getCommandTags().contains(CURSED_TAG)) {
+                    clearCursedState(living);
+                }
             }
         }
     }

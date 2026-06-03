@@ -5,6 +5,7 @@ import com.rounds.zero.game.GameManager;
 import com.rounds.zero.game.arena.Arena;
 import com.rounds.zero.game.combat.CombatManager;
 import com.rounds.zero.game.rules.FriendlyFireHandler;
+import com.rounds.zero.game.rules.PlayerMeleeHandler;
 import com.rounds.zero.game.rules.WorldInteractionHandler;
 import com.rounds.zero.item.ModItems;
 import com.rounds.zero.item.ModWeaponItems;
@@ -52,8 +53,8 @@ public class RoundsZero implements ModInitializer {
                 "Bank",
                 new BlockPos(84, -34, 49),
                 new BlockPos(57, -34, 76),
-                new BlockPos(84, -34, 76),
-                new BlockPos(57, -34, 49)
+                new BlockPos(57, -34, 49),
+                new BlockPos(84, -34, 76)
         ));
 
         GAME_MANAGER.addArena(new Arena(
@@ -103,7 +104,7 @@ public class RoundsZero implements ModInitializer {
             }
 
             // cursed explosion on death (no block damage)
-            if (living.getCommandTags().contains("rounds_zero_cursed")) {
+            if (living.getCommandTags().contains(CombatManager.CURSED_TAG)) {
                 living.getWorld().createExplosion(
                         living,
                         living.getDamageSources().explosion(living, living),
@@ -122,6 +123,7 @@ public class RoundsZero implements ModInitializer {
                         false,
                         net.minecraft.world.World.ExplosionSourceType.MOB
                 );
+                CombatManager.clearCursedState(living);
             }
 
             // parasite spawns
@@ -190,6 +192,13 @@ public class RoundsZero implements ModInitializer {
 
             // 4) Friendly fire: запрещаем урон между сокомандниками, если FF выключен
             if (FriendlyFireHandler.shouldCancelDamage(player, source)) {
+                return false;
+            }
+
+            // 5) Удар рукой / пистолетом (ЛКМ): без урона игрокам, с отталкиванием
+            if (PlayerMeleeHandler.shouldCancelPlayerMeleeDamage(player, source)) {
+                ServerPlayerEntity attacker = (ServerPlayerEntity) source.getAttacker();
+                PlayerMeleeHandler.applyMeleeKnockback(attacker, player);
                 return false;
             }
 

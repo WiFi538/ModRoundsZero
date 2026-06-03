@@ -30,9 +30,10 @@ public final class ModPackets {
         });
     }
 
-    public static void sendUpgradeScreen(ServerPlayerEntity player, List<UpgradeCard> cards) {
+    public static void sendUpgradeScreen(ServerPlayerEntity player, List<UpgradeCard> cards, long choiceUnlockTick) {
         var buf = PacketByteBufs.create();
 
+        buf.writeVarLong(choiceUnlockTick);
         buf.writeInt(cards.size());
 
         for (UpgradeCard card : cards) {

@@ -12,6 +12,8 @@ import com.rounds.zero.game.upgrade.UpgradeCard;
 import com.rounds.zero.game.upgrade.UpgradeEffectResolver;
 import com.rounds.zero.game.upgrade.UpgradeRegistry;
 import com.rounds.zero.item.ModWeaponItems;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
@@ -26,6 +28,8 @@ import net.minecraft.world.GameRules;
 import java.util.*;
 
 public class GameManager {
+    public static final int UPGRADE_SELECTION_DELAY_TICKS = 40;
+
     private GameState gameState = GameState.WAITING;
 
     private final Map<UUID, TeamId> playerTeams = new HashMap<>();
@@ -34,7 +38,12 @@ public class GameManager {
 
     private final Set<UUID> playersWaitingForUpgradeChoice = new HashSet<>();
     private final Map<UUID, List<UpgradeCard>> currentUpgradeOffers = new HashMap<>();
+    private final Map<UUID, Long> upgradeChoiceUnlockTick = new HashMap<>();
+    private final Map<UUID, PendingUpgradeScreen> pendingUpgradeScreens = new HashMap<>();
     private final Map<UUID, PlayerUpgradeData> playerUpgradeData = new HashMap<>();
+
+    private record PendingUpgradeScreen(List<UpgradeCard> offer, long sendAtTick, long choiceUnlockTick) {
+    }
 
     private TeamId pendingUpgradeLoserTeam = TeamId.NONE;
     private TeamId pendingUpgradeWinnerTeam = TeamId.NONE;
@@ -89,30 +98,73 @@ public class GameManager {
 
     public void tickCombat(MinecraftServer server) {
         long now = server.getOverworld().getTime();
+
+        if (gameState == GameState.UPGRADE_SELECTION) {
+            processPendingUpgradeScreens(server, now);
+        }
+
         if (now % 20L == 0L) {
             enforceGameModes(server);
+            enforceSpectatorGlow(server);
         }
+
         if (gameState == GameState.ROUND_ACTIVE) {
             roundEventManager.tick(server, this, now);
         }
         combatManager.tick(server);
     }
 
+    private void enforceSpectatorGlow(MinecraftServer server) {
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (player.interactionManager.getGameMode() == GameMode.SPECTATOR) {
+                player.addStatusEffect(new StatusEffectInstance(
+                        StatusEffects.GLOWING,
+                        60,
+                        0,
+                        true,
+                        false,
+                        false
+                ));
+            } else {
+                StatusEffectInstance glowing = player.getStatusEffect(StatusEffects.GLOWING);
+                if (glowing != null && glowing.isAmbient()) {
+                    player.removeStatusEffect(StatusEffects.GLOWING);
+                }
+            }
+        }
+    }
+
+    private void processPendingUpgradeScreens(MinecraftServer server, long now) {
+        Iterator<Map.Entry<UUID, PendingUpgradeScreen>> iterator = pendingUpgradeScreens.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, PendingUpgradeScreen> entry = iterator.next();
+            PendingUpgradeScreen pending = entry.getValue();
+
+            if (now < pending.sendAtTick()) {
+                continue;
+            }
+
+            ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
+            if (player != null && gameState == GameState.UPGRADE_SELECTION) {
+                ModPackets.sendUpgradeScreen(player, pending.offer(), pending.choiceUnlockTick());
+            }
+
+            iterator.remove();
+        }
+    }
+
+    private void clearUpgradeSelectionScheduling() {
+        upgradeChoiceUnlockTick.clear();
+        pendingUpgradeScreens.clear();
+    }
+
     public boolean shouldBlockWorldInteraction(ServerPlayerEntity player) {
         return hasTeam(player);
     }
 
-    private boolean shouldAutoManageGameMode(ServerPlayerEntity player) {
-        // OP players can manually control their game mode.
-        return !player.hasPermissionLevel(2);
-    }
-
     private void enforceGameModes(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            if (!shouldAutoManageGameMode(player)) {
-                continue;
-            }
-
             if (!hasTeam(player)) {
                 if (gameState == GameState.WAITING && player.interactionManager.getGameMode() != GameMode.ADVENTURE) {
                     player.changeGameMode(GameMode.ADVENTURE);
@@ -136,7 +188,7 @@ public class GameManager {
                     }
                 }
                 case UPGRADE_SELECTION -> {
-                    if (isWaitingForUpgradeChoice(player)) {
+                    if (!isAliveInRound(player)) {
                         if (player.interactionManager.getGameMode() != GameMode.SPECTATOR) {
                             player.changeGameMode(GameMode.SPECTATOR);
                         }
@@ -316,6 +368,7 @@ public class GameManager {
 
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
+        clearUpgradeSelectionScheduling();
         pendingUpgradeLoserTeam = TeamId.NONE;
         pendingUpgradeWinnerTeam = TeamId.NONE;
 
@@ -344,6 +397,18 @@ public class GameManager {
             return false;
         }
 
+        long now = server.getOverworld().getTime();
+        Long unlockTick = upgradeChoiceUnlockTick.get(player.getUuid());
+        if (unlockTick != null && now < unlockTick) {
+            double secondsLeft = (unlockTick - now) / 20.0;
+            player.sendMessage(
+                    Text.literal(String.format("Подожди %.1f сек. перед выбором карты.", secondsLeft))
+                            .formatted(Formatting.YELLOW),
+                    false
+            );
+            return false;
+        }
+
         UpgradeCard selectedCard = offer.get(optionIndex - 1);
 
         playerUpgradeData
@@ -352,6 +417,8 @@ public class GameManager {
 
         playersWaitingForUpgradeChoice.remove(player.getUuid());
         currentUpgradeOffers.remove(player.getUuid());
+        upgradeChoiceUnlockTick.remove(player.getUuid());
+        pendingUpgradeScreens.remove(player.getUuid());
 
         player.sendMessage(
                 Text.literal("Ты выбрал карту: ")
@@ -379,6 +446,7 @@ public class GameManager {
         pendingUpgradeLoserTeam = TeamId.NONE;
         pendingUpgradeWinnerTeam = TeamId.NONE;
         currentUpgradeOffers.clear();
+        clearUpgradeSelectionScheduling();
         startNextRound(server);
     }
 
@@ -410,10 +478,9 @@ public class GameManager {
 
     public void sendPlayerToLobby(MinecraftServer server, ServerPlayerEntity player) {
         combatManager.resetPlayerToDefault(player);
+        CombatManager.clearCursedState(player);
 
-        if (shouldAutoManageGameMode(player)) {
-            player.changeGameMode(GameMode.ADVENTURE);
-        }
+        player.changeGameMode(GameMode.ADVENTURE);
         player.getInventory().clear();
         player.setHealth(player.getMaxHealth());
         player.getHungerManager().setFoodLevel(20);
@@ -447,6 +514,7 @@ public class GameManager {
 
         alivePlayers.remove(player.getUuid());
         combatManager.clearTemporaryState(player);
+        CombatManager.clearCursedState(player);
         checkRoundWinByElimination(server);
     }
 
@@ -474,9 +542,7 @@ public class GameManager {
             return;
         }
 
-        if (shouldAutoManageGameMode(player)) {
-            player.changeGameMode(GameMode.SPECTATOR);
-        }
+        player.changeGameMode(GameMode.SPECTATOR);
 
         if (currentArena != null) {
             BlockPos targetPos = getSpawnForTeam(currentArena, teamId);
@@ -565,7 +631,8 @@ public class GameManager {
 
         setGameState(GameState.ROUND_END);
         roundEventManager.onRoundEnd(server, this);
-        combatManager.clearRoundProjectiles(server);
+        combatManager.clearRoundEntities(server);
+        combatManager.clearAllCursedEntities(server);
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (hasTeam(player)) {
@@ -595,6 +662,11 @@ public class GameManager {
         pendingUpgradeLoserTeam = TeamId.NONE;
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
+        clearUpgradeSelectionScheduling();
+
+        long now = server.getOverworld().getTime();
+        long sendAtTick = now + UPGRADE_SELECTION_DELAY_TICKS;
+        long choiceUnlockTick = sendAtTick;
 
         List<TeamId> loserTeams = new ArrayList<>();
 
@@ -613,10 +685,9 @@ public class GameManager {
                 playersWaitingForUpgradeChoice.add(player.getUuid());
                 List<UpgradeCard> offer = generateUpgradeOffer(5);
                 currentUpgradeOffers.put(player.getUuid(), offer);
-                if (shouldAutoManageGameMode(player)) {
-                    player.changeGameMode(GameMode.SPECTATOR);
-                }
-                ModPackets.sendUpgradeScreen(player, offer);
+                upgradeChoiceUnlockTick.put(player.getUuid(), choiceUnlockTick);
+                pendingUpgradeScreens.put(player.getUuid(), new PendingUpgradeScreen(offer, sendAtTick, choiceUnlockTick));
+                player.changeGameMode(GameMode.SPECTATOR);
             }
         }
 
@@ -746,6 +817,7 @@ public class GameManager {
         alivePlayers.clear();
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
+        clearUpgradeSelectionScheduling();
         playerUpgradeData.clear();
         pendingUpgradeLoserTeam = TeamId.NONE;
         pendingUpgradeWinnerTeam = TeamId.NONE;
@@ -785,12 +857,13 @@ public class GameManager {
 
         setCurrentArena(randomArena);
         setGameState(GameState.ROUND_ACTIVE);
-        combatManager.clearRoundProjectiles(server);
+        combatManager.clearRoundEntities(server);
         roundEventManager.onRoundStart(server, this);
 
         alivePlayers.clear();
         playersWaitingForUpgradeChoice.clear();
         currentUpgradeOffers.clear();
+        clearUpgradeSelectionScheduling();
         pendingUpgradeLoserTeam = TeamId.NONE;
         pendingUpgradeWinnerTeam = TeamId.NONE;
 
@@ -806,9 +879,7 @@ public class GameManager {
             CombatStats resolvedStats = UpgradeEffectResolver.resolve(getOwnedUpgrades(player));
             combatManager.preparePlayerForNewRound(player, resolvedStats);
 
-            if (shouldAutoManageGameMode(player)) {
-                player.changeGameMode(GameMode.ADVENTURE);
-            }
+            player.changeGameMode(GameMode.ADVENTURE);
             player.setHealth(player.getMaxHealth());
             player.getHungerManager().setFoodLevel(20);
             player.getHungerManager().setSaturationLevel(20.0f);

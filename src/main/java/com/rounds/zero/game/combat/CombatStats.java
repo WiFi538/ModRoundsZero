@@ -79,7 +79,7 @@ public class CombatStats {
     private long bombShieldExtraCooldownTicks = 100L;
 
     private boolean kaboom = false;
-    private float kaboomDamage = 4.0f;
+    private float kaboomDamage = 2.0f;
     private double kaboomRadius = 1.5;
     private boolean fireGhostSynergy = false;
 

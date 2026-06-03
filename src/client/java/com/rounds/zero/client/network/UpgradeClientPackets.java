@@ -11,7 +11,7 @@ public class UpgradeClientPackets {
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(ModPackets.OPEN_UPGRADE_SCREEN, (client, handler, buf, responseSender) -> {
-
+            long choiceUnlockTick = buf.readVarLong();
             int size = buf.readInt();
 
             List<UpgradeSelectScreen.Card> cards = new ArrayList<>();
@@ -26,7 +26,7 @@ public class UpgradeClientPackets {
             }
 
             client.execute(() -> {
-                client.setScreen(new UpgradeSelectScreen(cards));
+                client.setScreen(new UpgradeSelectScreen(cards, choiceUnlockTick));
             });
         });
     }

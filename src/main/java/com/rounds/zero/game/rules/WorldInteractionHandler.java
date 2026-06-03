@@ -1,6 +1,7 @@
 package com.rounds.zero.game.rules;
 
 import net.minecraft.block.AbstractFurnaceBlock;
+import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BarrelBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -25,6 +26,7 @@ public final class WorldInteractionHandler {
                 || block instanceof TrappedChestBlock
                 || block instanceof BarrelBlock
                 || block instanceof AbstractFurnaceBlock
+                || block instanceof AnvilBlock
                 || block instanceof FenceGateBlock
                 || block instanceof TrapdoorBlock
                 || block instanceof SignBlock

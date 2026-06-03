@@ -86,7 +86,7 @@ public final class UpgradeEffectResolver {
                 }
                 case "kaboom" -> {
                     stats.setKaboom(true);
-                    stats.setKaboomDamage(Math.max(stats.getKaboomDamage(), 4.0f));
+                    stats.setKaboomDamage(Math.max(stats.getKaboomDamage(), 2.0f));
                     stats.setKaboomRadius(Math.max(stats.getKaboomRadius(), 1.5));
                 }
                 default -> {

@@ -289,7 +289,7 @@ public final class UpgradeRegistry {
         register(UpgradeCard.builder(
                 "kaboom",
                 "БАБАХ",
-                "Пуля взрывается при попадании (3 блока, 2 сердца). Бьёт всех, включая тебя и союзников. -10% скорость стрельбы, -10% скорость пуль."
+                "Пуля взрывается при попадании (3 блока, 1 сердце). Бьёт всех, включая тебя и союзников. -10% скорость стрельбы, -10% скорость пуль."
         ).texturePath("rounds_zero:textures/gui/cards/big_bullet.png")
                 .fireRatePercent(-10.0)
                 .bulletSpeedMultiplier(0.9)

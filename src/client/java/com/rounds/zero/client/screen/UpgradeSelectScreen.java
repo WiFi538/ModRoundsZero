@@ -52,6 +52,7 @@ public class UpgradeSelectScreen extends Screen {
     private static final int PREFERRED_MAX_CARD_WIDTH = 200;
 
     private final List<Card> cards;
+    private final long choiceUnlockTick;
     private List<CardLayout> layouts = List.of();
     private RowMetrics rowMetrics = RowMetrics.empty();
     private int lastLayoutWidth = -1;
@@ -66,9 +67,27 @@ public class UpgradeSelectScreen extends Screen {
         }
     }
 
-    public UpgradeSelectScreen(List<Card> cards) {
+    public UpgradeSelectScreen(List<Card> cards, long choiceUnlockTick) {
         super(Text.literal("Выбор улучшения"));
         this.cards = cards;
+        this.choiceUnlockTick = choiceUnlockTick;
+    }
+
+    private boolean isChoiceLocked() {
+        if (client == null || client.world == null) {
+            return true;
+        }
+
+        return client.world.getTime() < choiceUnlockTick;
+    }
+
+    private int getSecondsUntilUnlock() {
+        if (client == null || client.world == null) {
+            return 2;
+        }
+
+        long ticksLeft = choiceUnlockTick - client.world.getTime();
+        return Math.max(1, (int) Math.ceil(ticksLeft / 20.0));
     }
 
     @Override
@@ -112,13 +131,24 @@ public class UpgradeSelectScreen extends Screen {
         ensureLayoutsUpToDate();
 
         int headerY = Math.max(12, rowMetrics.startY() - 24);
-        ctx.drawCenteredTextWithShadow(
-                textRenderer,
-                Text.literal("Выбор улучшения").formatted(Formatting.GOLD),
-                width / 2,
-                headerY,
-                0xFFFFFF
-        );
+        if (isChoiceLocked()) {
+            ctx.drawCenteredTextWithShadow(
+                    textRenderer,
+                    Text.literal("Выбор через " + getSecondsUntilUnlock() + " сек...")
+                            .formatted(Formatting.YELLOW),
+                    width / 2,
+                    headerY,
+                    0xFFFFFF
+            );
+        } else {
+            ctx.drawCenteredTextWithShadow(
+                    textRenderer,
+                    Text.literal("Выбор улучшения").formatted(Formatting.GOLD),
+                    width / 2,
+                    headerY,
+                    0xFFFFFF
+            );
+        }
 
         if (cards == null || cards.isEmpty()) {
             super.render(ctx, mouseX, mouseY, delta);
@@ -189,7 +219,7 @@ public class UpgradeSelectScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button != 0 || cards == null || cards.isEmpty()) {
+        if (button != 0 || cards == null || cards.isEmpty() || isChoiceLocked()) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
