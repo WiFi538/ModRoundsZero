@@ -4,6 +4,7 @@ import com.rounds.zero.command.RoundsCommand;
 import com.rounds.zero.game.GameManager;
 import com.rounds.zero.game.arena.Arena;
 import com.rounds.zero.game.combat.CombatManager;
+import com.rounds.zero.game.combat.ParasiteSilverfishHelper;
 import com.rounds.zero.game.rules.FriendlyFireHandler;
 import com.rounds.zero.game.rules.PlayerMeleeHandler;
 import com.rounds.zero.game.rules.WorldInteractionHandler;
@@ -89,6 +90,46 @@ public class RoundsZero implements ModInitializer {
                 new BlockPos(137, -34, 75)
         ));
 
+        GAME_MANAGER.addArena(new Arena(
+                "Заброшенный храм",
+                new BlockPos(118, -27, 75),
+                new BlockPos(118, -34, 75),
+                new BlockPos(93, -27, 50),
+                new BlockPos(93, -34, 50)
+        ));
+
+        GAME_MANAGER.addArena(new Arena(
+                "Backrooms",
+                new BlockPos(158, -34, -6),
+                new BlockPos(126, -34, -6),
+                new BlockPos(126, -36, 25),
+                new BlockPos(158, -34, 25)
+        ));
+
+        GAME_MANAGER.addArena(new Arena(
+                "Радуга",
+                new BlockPos(46, -40, 78),
+                new BlockPos(20, -40, 52),
+                new BlockPos(46, -40, 52),
+                new BlockPos(20, -40, 78)
+        ));
+
+        GAME_MANAGER.addArena(new Arena(
+                "Офис",
+                new BlockPos(83, -30, 50),
+                new BlockPos(58, -30, 75),
+                new BlockPos(81, -30, 71),
+                new BlockPos(58, -30, 50)
+        ));
+
+        GAME_MANAGER.addArena(new Arena(
+                "Библиотека",
+                new BlockPos(114, -34, 37),
+                new BlockPos(70, -34, -6),
+                new BlockPos(114, -34, -6),
+                new BlockPos(70, -34, 37)
+        ));
+
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> RoundsCommand.register(dispatcher));
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
@@ -131,15 +172,16 @@ public class RoundsZero implements ModInitializer {
                     && projectile.getCommandTags().contains(CombatManager.ROUNDS_BULLET_TAG)
                     && projectile.getOwner() instanceof ServerPlayerEntity shooter) {
                 var stats = GAME_MANAGER.getCombatManager().getStats(shooter);
-                if (stats.isParasite()) {
-                    if (living instanceof ServerPlayerEntity) {
-                        GAME_MANAGER.getCombatManager().spawnParasiteSilverfish(living, shooter);
+                if (stats.isParasite() && living instanceof ServerPlayerEntity) {
+                    int spawnCount = Math.max(1, stats.getParasiteSpawnOnKill());
+                    for (int i = 0; i < spawnCount; i++) {
                         GAME_MANAGER.getCombatManager().spawnParasiteSilverfish(living, shooter);
                     }
                 }
             }
 
-            if (damageSource.getAttacker() != null && damageSource.getAttacker().getCommandTags().contains("rounds_zero_parasite_silverfish")) {
+            if (damageSource.getAttacker() != null
+                    && ParasiteSilverfishHelper.isParasiteSilverfish(damageSource.getAttacker())) {
                 if (living instanceof ServerPlayerEntity) {
                     ServerPlayerEntity parasiteOwner = resolveParasiteSilverfishOwner(damageSource.getAttacker());
                     GAME_MANAGER.getCombatManager().spawnParasiteSilverfish(living, parasiteOwner);
@@ -168,7 +210,7 @@ public class RoundsZero implements ModInitializer {
             }
 
             if (source.getAttacker() != null
-                    && source.getAttacker().getCommandTags().contains("rounds_zero_parasite_silverfish")
+                    && ParasiteSilverfishHelper.isParasiteSilverfish(source.getAttacker())
                     && GAME_MANAGER.playerHasParasiteSummonerSynergy(player)) {
                 return false;
             }
@@ -291,7 +333,7 @@ public class RoundsZero implements ModInitializer {
             return null;
         }
 
-        String prefix = "rounds_zero_parasite_silverfish:";
+        String prefix = ParasiteSilverfishHelper.TAG + ":";
         for (String tag : silverfish.getCommandTags()) {
             if (!tag.startsWith(prefix)) {
                 continue;

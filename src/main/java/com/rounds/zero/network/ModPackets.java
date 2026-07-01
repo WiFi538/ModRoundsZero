@@ -16,6 +16,8 @@ public final class ModPackets {
     public static final Identifier RELOAD_WEAPON = new Identifier(RoundsZero.MOD_ID, "reload_weapon");
     public static final Identifier OPEN_UPGRADE_SCREEN = new Identifier(RoundsZero.MOD_ID, "open_upgrade_screen");
     public static final Identifier SELECT_UPGRADE = new Identifier(RoundsZero.MOD_ID, "select_upgrade");
+    public static final Identifier REQUEST_PLAYER_STATS = new Identifier(RoundsZero.MOD_ID, "request_player_stats");
+    public static final Identifier SYNC_PLAYER_STATS = new Identifier(RoundsZero.MOD_ID, "sync_player_stats");
 
     private ModPackets() {
     }
@@ -28,6 +30,10 @@ public final class ModPackets {
                 RoundsZero.GAME_MANAGER.submitUpgradeChoice(server, player, index);
             });
         });
+
+        ServerPlayNetworking.registerGlobalReceiver(REQUEST_PLAYER_STATS, (server, player, handler, buf, responseSender) ->
+                server.execute(() -> sendPlayerStats(player))
+        );
     }
 
     public static void sendUpgradeScreen(ServerPlayerEntity player, List<UpgradeCard> cards, long choiceUnlockTick) {
@@ -44,6 +50,12 @@ public final class ModPackets {
         }
 
         ServerPlayNetworking.send(player, OPEN_UPGRADE_SCREEN, buf);
+    }
+
+    public static void sendPlayerStats(ServerPlayerEntity player) {
+        var buf = PacketByteBufs.create();
+        PlayerStatsSnapshot.create(player).write(buf);
+        ServerPlayNetworking.send(player, SYNC_PLAYER_STATS, buf);
     }
 
     private static String toWireCategoryId(UpgradeCardCategory category) {

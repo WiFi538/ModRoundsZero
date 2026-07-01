@@ -54,7 +54,6 @@ public class CombatManager {
     private final Random random = new Random();
 
     public static final String CURSED_TAG = "rounds_zero_cursed";
-    private static final String PARASITE_SILVERFISH_TAG = "rounds_zero_parasite_silverfish";
     private static final String SUMMONER_ZOMBIE_TAG = "rounds_zero_summoner_zombie";
     private static final String KABOOM_TAG = "rounds_zero_kaboom";
 
@@ -266,6 +265,12 @@ public class CombatManager {
             attack.setBaseValue(stats.getSummonerZombieDamage());
         }
 
+        var maxHealth = zombie.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(stats.getSummonerZombieMaxHealth());
+            zombie.setHealth((float) stats.getSummonerZombieMaxHealth());
+        }
+
         world.spawnEntity(zombie);
         ids.add(zombie.getUuid());
     }
@@ -438,12 +443,10 @@ public class CombatManager {
                 target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, stats.getIceBulletDurationTicks(), 1));
             }
 
-            if (stats.getPoisonBulletDurationTicks() > 0) {
-                target.addStatusEffect(new StatusEffectInstance(
-                        StatusEffects.POISON,
-                        stats.getPoisonBulletDurationTicks(),
-                        stats.getPoisonBulletAmplifier()
-                ));
+            if (stats.getPoisonBulletInstantHearts() > 0.0f) {
+                float poisonDamage = stats.getPoisonBulletInstantHearts() * 2.0f;
+                target.damage(shooter.getDamageSources().magic(), poisonDamage);
+                target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 40, 0));
             }
 
             if (stats.getBlindnessChancePercent() > 0 && random.nextInt(100) < stats.getBlindnessChancePercent()) {
@@ -600,9 +603,9 @@ public class CombatManager {
         }
 
         SilverfishEntity fish = new SilverfishEntity(EntityType.SILVERFISH, world);
-        fish.addCommandTag(PARASITE_SILVERFISH_TAG);
+        fish.addCommandTag(ParasiteSilverfishHelper.TAG);
         if (owner != null) {
-            fish.addCommandTag(PARASITE_SILVERFISH_TAG + ":" + owner.getUuid());
+            fish.addCommandTag(ParasiteSilverfishHelper.TAG + ":" + owner.getUuid());
         }
         fish.refreshPositionAndAngles(from.getX(), from.getY(), from.getZ(), world.random.nextFloat() * 360.0f, 0.0f);
 
@@ -611,6 +614,7 @@ public class CombatManager {
             attack.setBaseValue(4.0);
         }
 
+        ParasiteSilverfishHelper.configure(fish);
         world.spawnEntity(fish);
     }
 
@@ -695,7 +699,8 @@ public class CombatManager {
                 FieldTargetMode.SELF_AND_ALLIES,
                 FieldEffectType.HEALING,
                 RoundsZero.GAME_MANAGER.getPlayerTeam(caster),
-                stats.isHealingFieldSurge()
+                stats.isHealingFieldSurge(),
+                stats.getHealingFieldSurgeHearts()
         ));
     }
 
@@ -714,7 +719,8 @@ public class CombatManager {
                 FieldTargetMode.ALL,
                 FieldEffectType.POISON,
                 RoundsZero.GAME_MANAGER.getPlayerTeam(caster),
-                false
+                false,
+                0
         ));
     }
 
@@ -856,18 +862,21 @@ public class CombatManager {
                 }
 
                 if (field.effectType == FieldEffectType.HEALING) {
-                    applyEffectIfAbsent(player, new StatusEffectInstance(
+                    StatusEffectInstance regen = new StatusEffectInstance(
                             StatusEffects.REGENERATION,
                             field.effectDurationTicks,
                             field.amplifier
-                    ));
+                    );
+                    boolean appliedRegen = player.getStatusEffect(StatusEffects.REGENERATION) == null;
+                    applyEffectIfAbsent(player, regen);
+                    if (appliedRegen && field.healingSurgeHearts > 0) {
+                        player.heal(field.healingSurgeHearts * 2.0f);
+                    }
                     if (field.healingSurge) {
-                        // Health boost should persist until round end or death.
                         PlayerCombatData data = playerCombatData.get(player.getUuid());
                         if (data != null && !data.isHealingSurgeActive()) {
                             data.setHealingSurgeActive(true);
                             player.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, Integer.MAX_VALUE, 0));
-                            player.heal(4.0f); // immediate +2 hearts as a "surge" feeling
                         }
                     }
                 } else if (field.effectType == FieldEffectType.POISON) {
@@ -993,6 +1002,7 @@ public class CombatManager {
         private final FieldEffectType effectType;
         private final TeamId ownerTeam;
         private final boolean healingSurge;
+        private final int healingSurgeHearts;
 
         private ActiveField(
                 net.minecraft.registry.RegistryKey<World> worldKey,
@@ -1004,7 +1014,8 @@ public class CombatManager {
                 FieldTargetMode targetMode,
                 FieldEffectType effectType,
                 TeamId ownerTeam,
-                boolean healingSurge
+                boolean healingSurge,
+                int healingSurgeHearts
         ) {
             this.worldKey = worldKey;
             this.center = center;
@@ -1016,6 +1027,7 @@ public class CombatManager {
             this.effectType = effectType;
             this.ownerTeam = ownerTeam;
             this.healingSurge = healingSurge;
+            this.healingSurgeHearts = healingSurgeHearts;
         }
     }
 }

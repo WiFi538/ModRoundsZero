@@ -5,7 +5,9 @@
   "mixins": [
     "PersistentProjectileEntityMixin",
     "ShulkerBulletEntityMixin",
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "MobEntityAccessor",
+    "SilverfishEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

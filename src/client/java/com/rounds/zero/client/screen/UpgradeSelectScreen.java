@@ -1,8 +1,11 @@
 package com.rounds.zero.client.screen;
 
+import com.rounds.zero.client.network.StatsClientPackets;
 import com.rounds.zero.client.network.UpgradeClientPackets;
+import com.rounds.zero.client.util.MarkupTextParser;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -50,6 +53,8 @@ public class UpgradeSelectScreen extends Screen {
     private static final int BORDER = 2;
     private static final int ABSOLUTE_MIN_CARD_WIDTH = 52;
     private static final int PREFERRED_MAX_CARD_WIDTH = 200;
+    private static final int MIN_CARD_HEIGHT = 108;
+    private static final int EXTRA_CARD_HEIGHT_PADDING = 14;
 
     private final List<Card> cards;
     private final long choiceUnlockTick;
@@ -93,6 +98,12 @@ public class UpgradeSelectScreen extends Screen {
     @Override
     protected void init() {
         rebuildLayouts();
+
+        int buttonWidth = 136;
+        addDrawableChild(ButtonWidget.builder(
+                Text.literal("Характеристики (I)"),
+                button -> StatsClientPackets.requestStats(this)
+        ).dimensions(width - buttonWidth - 8, 6, buttonWidth, 20).build());
     }
 
     @Override
@@ -150,6 +161,14 @@ public class UpgradeSelectScreen extends Screen {
             );
         }
 
+        ctx.drawCenteredTextWithShadow(
+                textRenderer,
+                Text.literal("I — ваши характеристики").formatted(Formatting.GRAY),
+                width / 2,
+                headerY + 12,
+                0xFFAAAAAA
+        );
+
         if (cards == null || cards.isEmpty()) {
             super.render(ctx, mouseX, mouseY, delta);
             return;
@@ -181,7 +200,7 @@ public class UpgradeSelectScreen extends Screen {
 
         int innerWidth = Math.max(8, layout.width - rowMetrics.padding() * 2);
         List<OrderedText> titleLines = textRenderer.wrapLines(Text.literal(card.title()), innerWidth);
-        List<OrderedText> descriptionLines = textRenderer.wrapLines(Text.literal(card.description()), innerWidth);
+        List<OrderedText> descriptionLines = textRenderer.wrapLines(MarkupTextParser.parse(card.description()), innerWidth);
 
         int titleHeight = titleLines.size() * rowMetrics.lineHeight();
         int descriptionHeight = descriptionLines.size() * rowMetrics.lineHeight();
@@ -262,12 +281,12 @@ public class UpgradeSelectScreen extends Screen {
 
         cardWidth = Math.max(ABSOLUTE_MIN_CARD_WIDTH, cardWidth);
 
-        int padding = cardWidth < 72 ? 4 : (cardWidth < 100 ? 6 : (cardWidth < 130 ? 8 : 10));
-        int lineHeight = cardWidth < 72 ? 8 : 9;
+        int padding = cardWidth < 72 ? 5 : (cardWidth < 100 ? 7 : (cardWidth < 130 ? 9 : 11));
+        int lineHeight = cardWidth < 72 ? 9 : 10;
 
-        int cardHeight = estimateUniformCardHeight(cardWidth, padding, lineHeight);
-        int maxHeight = Math.max(72, (int) (height * 0.42));
-        cardHeight = Math.min(cardHeight, maxHeight);
+        int cardHeight = estimateUniformCardHeight(cardWidth, padding, lineHeight) + EXTRA_CARD_HEIGHT_PADDING;
+        int maxHeight = Math.max(MIN_CARD_HEIGHT + 24, (int) (height * 0.62));
+        cardHeight = Math.max(MIN_CARD_HEIGHT, Math.min(cardHeight, maxHeight));
 
         int totalRowWidth = count * cardWidth + (count - 1) * gap;
         int startX = (width - totalRowWidth) / 2;
@@ -301,11 +320,11 @@ public class UpgradeSelectScreen extends Screen {
 
         for (Card card : cards) {
             int titleLines = textRenderer.wrapLines(Text.literal(card.title()), innerWidth).size();
-            int descriptionLines = textRenderer.wrapLines(Text.literal(card.description()), innerWidth).size();
-            int contentHeight = titleLines * lineHeight + 6 + descriptionLines * lineHeight;
+            int descriptionLines = textRenderer.wrapLines(MarkupTextParser.parse(card.description()), innerWidth).size();
+            int contentHeight = titleLines * lineHeight + 8 + descriptionLines * lineHeight;
             maxContentHeight = Math.max(maxContentHeight, contentHeight);
         }
 
-        return maxContentHeight + padding * 2;
+        return maxContentHeight + padding * 2 + 6;
     }
 }

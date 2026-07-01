@@ -42,6 +42,7 @@ public class CombatStats {
     private float cursedExplosionPower = 0.0f;
 
     private boolean parasite = false;
+    private int parasiteSpawnOnKill = 0;
 
     private boolean jackpot = false;
     private int jackpotChancePercent = 0;
@@ -66,6 +67,10 @@ public class CombatStats {
     private boolean summoner = false;
     private int summonerLimitPerPlayer = 0;
     private float summonerZombieDamage = 0.0f;
+    private double summonerZombieMaxHealth = 20.0;
+
+    private float poisonBulletInstantHearts = 0.0f;
+    private int healingFieldSurgeHearts = 0;
 
     private boolean parasiteSummonerSynergy = false;
     private boolean depJackpotSynergy = false;
@@ -119,6 +124,7 @@ public class CombatStats {
         copy.cursedGlowDurationTicks = this.cursedGlowDurationTicks;
         copy.cursedExplosionPower = this.cursedExplosionPower;
         copy.parasite = this.parasite;
+        copy.parasiteSpawnOnKill = this.parasiteSpawnOnKill;
         copy.jackpot = this.jackpot;
         copy.jackpotChancePercent = this.jackpotChancePercent;
         copy.jackpotDurationTicks = this.jackpotDurationTicks;
@@ -137,6 +143,9 @@ public class CombatStats {
         copy.summoner = this.summoner;
         copy.summonerLimitPerPlayer = this.summonerLimitPerPlayer;
         copy.summonerZombieDamage = this.summonerZombieDamage;
+        copy.summonerZombieMaxHealth = this.summonerZombieMaxHealth;
+        copy.poisonBulletInstantHearts = this.poisonBulletInstantHearts;
+        copy.healingFieldSurgeHearts = this.healingFieldSurgeHearts;
         copy.parasiteSummonerSynergy = this.parasiteSummonerSynergy;
         copy.depJackpotSynergy = this.depJackpotSynergy;
         copy.healingFieldSurge = this.healingFieldSurge;
@@ -392,6 +401,14 @@ public class CombatStats {
         this.parasite = parasite;
     }
 
+    public int getParasiteSpawnOnKill() {
+        return parasiteSpawnOnKill;
+    }
+
+    public void setParasiteSpawnOnKill(int parasiteSpawnOnKill) {
+        this.parasiteSpawnOnKill = parasiteSpawnOnKill;
+    }
+
     public boolean isJackpot() {
         return jackpot;
     }
@@ -534,6 +551,30 @@ public class CombatStats {
 
     public void setSummonerZombieDamage(float summonerZombieDamage) {
         this.summonerZombieDamage = summonerZombieDamage;
+    }
+
+    public double getSummonerZombieMaxHealth() {
+        return summonerZombieMaxHealth;
+    }
+
+    public void setSummonerZombieMaxHealth(double summonerZombieMaxHealth) {
+        this.summonerZombieMaxHealth = summonerZombieMaxHealth;
+    }
+
+    public float getPoisonBulletInstantHearts() {
+        return poisonBulletInstantHearts;
+    }
+
+    public void setPoisonBulletInstantHearts(float poisonBulletInstantHearts) {
+        this.poisonBulletInstantHearts = poisonBulletInstantHearts;
+    }
+
+    public int getHealingFieldSurgeHearts() {
+        return healingFieldSurgeHearts;
+    }
+
+    public void setHealingFieldSurgeHearts(int healingFieldSurgeHearts) {
+        this.healingFieldSurgeHearts = healingFieldSurgeHearts;
     }
 
     public boolean isParasiteSummonerSynergy() {

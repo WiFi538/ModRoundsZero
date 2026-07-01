@@ -8,10 +8,10 @@ import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import net.minecraft.world.explosion.ExplosionBehavior;
 import org.joml.Vector3f;
 
 public final class CombatExplosionHelper {
@@ -25,6 +25,9 @@ public final class CombatExplosionHelper {
     private CombatExplosionHelper() {
     }
 
+    /**
+     * Cosmetic explosion with flat damage inside radius (no vanilla distance-scaled blast damage).
+     */
     public static void explode(
             ServerWorld world,
             ServerPlayerEntity source,
@@ -34,17 +37,15 @@ public final class CombatExplosionHelper {
             AllyDamageMode allyDamageMode
     ) {
         spawnExplosionVisuals(world, center, radius);
-
-        world.createExplosion(
-                source,
-                source.getDamageSources().explosion(source, source),
-                createNoBlockDamageBehavior(),
+        world.playSound(
+                null,
                 center.x,
                 center.y,
                 center.z,
-                (float) radius,
-                false,
-                World.ExplosionSourceType.MOB
+                SoundEvents.ENTITY_GENERIC_EXPLODE,
+                SoundCategory.PLAYERS,
+                4.0f,
+                (0.95f + world.getRandom().nextFloat() * 0.1f)
         );
 
         if (damage <= 0.0f) {
@@ -61,7 +62,7 @@ public final class CombatExplosionHelper {
                 center.z + radius
         );
 
-        DamageSource damageSource = source.getDamageSources().playerAttack(source);
+        DamageSource damageSource = source.getDamageSources().explosion(source, source);
         TeamId sourceTeam = RoundsZero.GAME_MANAGER.getPlayerTeam(source);
 
         for (LivingEntity entity : world.getEntitiesByClass(LivingEntity.class, area, LivingEntity::isAlive)) {
@@ -134,20 +135,5 @@ public final class CombatExplosionHelper {
             double z = center.z + Math.sin(angle) * radius;
             world.spawnParticles(ringParticle, x, center.y + 0.12, z, 2, 0.02, 0.04, 0.02, 0.0);
         }
-    }
-
-    private static ExplosionBehavior createNoBlockDamageBehavior() {
-        return new ExplosionBehavior() {
-            @Override
-            public boolean canDestroyBlock(
-                    net.minecraft.world.explosion.Explosion explosion,
-                    net.minecraft.world.BlockView blockView,
-                    net.minecraft.util.math.BlockPos pos,
-                    net.minecraft.block.BlockState state,
-                    float power
-            ) {
-                return false;
-            }
-        };
     }
 }
